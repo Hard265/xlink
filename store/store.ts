@@ -91,7 +91,6 @@ class Store {
   constructor() {
     makeObservable(this, {
       users: observable,
-      users: computed,
       messages: observable,
       addUser: action,
       addMessage: action,
