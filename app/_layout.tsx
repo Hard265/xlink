@@ -5,16 +5,17 @@ import { SQLiteProvider } from 'expo-sqlite/next';
 import { Suspense } from 'react';
 import { Text } from 'react-native';
 
-import { SocketProvider, SessionProvider } from '../providers'
+import { SocketProvider, SessionProvider } from '../providers';
 import { databaseInit } from '../store/databaseInit';
 
 export default function Root() {
-  // Set up the auth context and render our layout inside of it.
+  const socketUrl = '';
+
   return (
     <Suspense fallback={<Fallback />}>
       <SQLiteProvider databaseName="test2.db" onInit={databaseInit} useSuspense>
         <SessionProvider>
-          <SocketProvider url="">
+          <SocketProvider url={socketUrl}>
             <Slot />
           </SocketProvider>
         </SessionProvider>

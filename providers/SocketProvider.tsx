@@ -1,44 +1,42 @@
-import React from "react";
-
+import React from 'react';
+import { Socket, io } from 'socket.io-client';
 
 const SocketContext = React.createContext<{
-  socket: SocketIO | null;
+  socket: Socket | null;
   connected: boolean;
 }>({
-  secket: null,
+  socket: null,
   connected: false,
-})
+});
 
-export function useSocket(){
-  return React.useContext(SocketContext)
+export function useSocket() {
+  return React.useContext(SocketContext);
 }
 
-export function SocketProvider(props: React.PropsWithChildren<{url: string}>){
+export function SocketProvider(props: React.PropsWithChildren<{ url: string }>) {
   const [connected, setConnected] = React.useState<boolean>(false);
-  const [socket, setSocket] = React.useState<SocketIO | null>();
-  
-  React.useEffect(()=>{
-    const sock = new SocketIO(props.url);
-    
-    sock.on("connected", ()=>{
+  const [socket, setSocket] = React.useState<Socket | null>(null);
+
+  React.useEffect(() => {
+    const sock = io(props.url);
+
+    sock.on('connected', () => {
       setSocket(sock);
       setConnected(true);
     });
-    sock.on("disconnected", ()=>{
+    sock.on('disconnected', () => {
       setSocket(null);
       setConnected(false);
-    })
-    
-    return ()=> {
-      sock.off("connected");
-      sock.off("disconnected")    
+    });
+
+    return () => {
+      sock.off('connected');
+      sock.off('disconnected');
       sock.disconnect();
-    }
+    };
   }, [props.url]);
 
   return (
-    <SocketContext.Provider value={{socket, connected}}>
-      {props.children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={{ socket, connected }}>{props.children}</SocketContext.Provider>
   );
 }

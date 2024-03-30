@@ -26,9 +26,15 @@ export default observer(() => {
   };
 
   return (
-    <View>
-      <Button title="add user" onPress={onadduser} />
+    <View className="flex-1 p-4">
       <FlatList
+        ListHeaderComponent={
+          <Pressable className="flex w-full justify-center rounded-md bg-slate-300 px-3 py-2.5">
+            <Text className="text-sm font-semibold leading-6 text-slate-950 text-center">
+              scan address
+            </Text>
+          </Pressable>
+        }
         data={store.users}
         renderItem={({ item }) => (
           <Pressable

@@ -27,6 +27,7 @@
     "eciesjs": "^0.4.6",
     "elliptic-expo": "^6.5.3",
     "expo": "~50.0.13",
+    "expo-clipboard": "~5.0.1",
     "expo-constants": "~15.4.5",
     "expo-crypto": "~12.8.1",
     "expo-linking": "~6.2.2",
@@ -44,12 +45,15 @@
     "react": "18.2.0",
     "react-native": "0.73.5",
     "react-native-crypto-js": "^1.0.0",
+    "react-native-gesture-handler": "~2.14.0",
     "react-native-get-random-values": "^1.11.0",
+    "react-native-qrcode-svg": "^6.3.0",
+    "react-native-reanimated": "~3.6.2",
     "react-native-safe-area-context": "4.8.2",
     "react-native-screens": "~3.29.0",
-    "text-encoding": "^0.7.0",
-    "react-native-reanimated": "~3.6.2",
-    "react-native-gesture-handler": "~2.14.0"
+    "react-native-svg": "^15.1.0",
+    "socket.io-client": "^4.7.5",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -31,8 +31,6 @@ export function SessionProvider(props: React.PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
 
   const onsignin = (user: BaseUser) => {
-    console.log(user.toJson());
-
     setSession(user.toJson());
   };
 

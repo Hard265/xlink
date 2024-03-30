@@ -1,62 +1,73 @@
+import { PrivateKey } from 'eciesjs';
+import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { useSession } from '../providers/SessionProvider'
 import { entropyToMnemonic } from '../encryption/bip39';
 import { generateKeyPair, createUser } from '../encryption/key';
+import { useSession } from '../providers/SessionProvider';
+import { copyToClipboard } from '../utilities';
 
 export default function Page() {
-  const { signIn } = useSession()
-  
-  const [loading, setLoading] = useState(false);
-  const [key, setKey] = useState<KeyPair>();
+  const { signIn } = useSession();
+
+  const [loading, setLoading] = useState(true);
+  const [key, setKey] = useState<PrivateKey | null>(null);
   const [mnemonicSeed, setMnemonicSeed] = useState('');
 
-  const setup = ()=>{
-    setLoading(true);
-    setKey(genarateKeyPair());
-    setMnemonicSeed(entropyToMnemonic(key.toHex()));
-    setLoading(false);
-  }
-
   useEffect(() => {
-    setup();
+    setLoading(true);
+    const _key = generateKeyPair();
+    setMnemonicSeed(entropyToMnemonic(_key.toHex()));
+    setKey(_key);
+    setLoading(false);
   }, []);
 
-  const onsignin = ()=>{
-    const user = createUser(key);
-    signIn(user);
-  }
+  const onsignin = () => {
+    if (key) {
+      const user = createUser(key);
+      signIn(user);
+      router.replace('/(app)/');
+    }
+  };
 
-  const oncopy = ()=>{
-    console.log(mnemonicSeed)
-  }
+  const oncopy = () => {
+    copyToClipboard(mnemonicSeed.trim());
+  };
 
-  if(loading){
+  if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <ActivityIndicator/>
+        <ActivityIndicator color="#000" size="large" />
       </View>
-    )
+    );
   }
-  
+
   return (
-    <View className="flex-1 justify-center items-center">
-      <Text className="text-lg capitalize">seed backup</Text>
-      <Text className="text-slate-600 text-center">Please carefully jot down these words on a piece of paper and store it securely, as this is the sole method to recover your address.</Text>
-      <View className="flex flex-row flex-wrap gap-2 items-center justify-center">
-        {mnemonicSeed.split(' ').map((mnemonic, index) => {
-          return (
-            <View className="p-3 border border-gray-300 rounded-lg flex-row gap-x-2" key={index}>
-              <Text className="text-gray-400">{index + 1}</Text>
-              <Text>{mnemonic}</Text>
-            </View>
-          );
-        })}
+    <View className="p-4 flex-1 justify-center items-center">
+      <View className="my-auto">
+        <View className="flex flex-row flex-wrap gap-2 items-center justify-center">
+          {mnemonicSeed.split(' ').map((mnemonic, index) => {
+            return (
+              <View
+                className="p-1.5 border border-gray-300 rounded-lg flex-row items-center gap-x-1.5"
+                key={index}>
+                <Text className="text-gray-400">{index + 1}</Text>
+                <Text className="font-semibold">{mnemonic}</Text>
+              </View>
+            );
+          })}
+        </View>
+        <Text
+          onPress={oncopy}
+          className="text-center font-medium text-blue-600 dark:text-blue-500 hover:underline mt-4">
+          copy to clipboard
+        </Text>
       </View>
-      <Text className="text-center font-semibold leading-6 text-indigo-600 active:text-indigo-500">copy to clipboard</Text>
-      <Pressable className="flex w-full justify-center rounded bg-slate-950 px-3 py-1.5 shadow-sm">
-        <Text className="text-sm font-semibold leading-6 text-white">continue</Text>
+      <Pressable
+        onPress={onsignin}
+        className="flex w-full justify-center rounded bg-slate-950 px-3 py-2.5 shadow-sm">
+        <Text className="text-sm text-center font-semibold leading-6 text-white">continue</Text>
       </Pressable>
     </View>
   );

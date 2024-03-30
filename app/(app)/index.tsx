@@ -26,9 +26,10 @@ export default observer(() => {
     router.push('/(app)/users');
   };
 
+  const onuser = () => router.push('/(app)/user');
+
   return (
     <View className="items-center justify-center flex-1">
-      <Button title="sign out" onPress={() => signOut()} />
       <FlatList
         data={data}
         renderItem={({ item }) => {
@@ -52,13 +53,13 @@ export default observer(() => {
       />
       <Pressable onPress={onfab} className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-xl">
         <Text className="text-gray-50">
-          <Feather name="users" size={24} />
+          <Feather name="users" size={20} />
         </Text>
       </Pressable>
       <Stack.Screen
         options={{
           headerRight(props) {
-            return <Feather name="user" size={24} color={props.tintColor} />;
+            return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
           },
         }}
       />

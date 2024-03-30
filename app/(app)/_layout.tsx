@@ -9,10 +9,7 @@ export default function AppLayout() {
   if (isLoading) {
     return <Text>Loading2...</Text>;
   }
-
-  console.log(session);
   if (!session) {
-    
     return <Redirect href="/sign-in" />;
   }
 

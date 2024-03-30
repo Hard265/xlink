@@ -136,11 +136,11 @@ export function generateMnemonic(
   return entropyToMnemonic(rng(strength / 8), wordlist);
 }
 
-export function validateMnemonic(mnemonic: string, wordlist?: string[]): boolean {
+export function validateMnemonic(mnemonic: string): boolean {
   try {
-    mnemonicToEntropy(mnemonic, wordlist);
+    mnemonicToEntropy(mnemonic, _DEFAULT_WORDLIST);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_) {
+  } catch (e) {
     return false;
   }
 
