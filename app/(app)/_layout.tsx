@@ -13,5 +13,15 @@ export default function AppLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  return <Stack />;
+  return (
+    <Stack>
+      <Stack.Screen
+                name="scan"
+                options={{
+                  // Set the presentation mode to modal for our modal route.
+                  presentation: 'modal',
+                }}
+              />
+            </Stack>
+  );
 }

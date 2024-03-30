@@ -8,17 +8,14 @@ import store, { User } from '../../store/store';
 
 export default observer(() => {
   const db = useSQLiteContext();
-
-  const onadduser = () => {
-    store.addUser(
-      db,
-      User.fromJson({
-        address: '0x12',
-        displayName: 'Name',
-        publicKey: '0x1234567890',
-      }),
-    );
-  };
+  
+  const setup = ()=>{
+    store.initializeUsers(db);
+  }
+  
+  useEffect(()=>{
+    setup();
+  },[]);
 
   const onnavigate = ({ address, displayName }: { address: string; displayName: string }) => {
     //@ts-ignore
@@ -38,8 +35,14 @@ export default observer(() => {
         data={store.users}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => onnavigate({ address: item.address, displayName: item.displayName })}>
-            <Text>{item.address}</Text>
+            onPress={() => onnavigate({ address: item.address, displayName: item.displayName })}
+            className='w-full px-2 py-0.5 flex flex-row gap-x-2 items-center'
+          >
+            <View className="p-4 rounded-full bg-gray-200"/>
+            <View class='flex-1 flex flex-col items-start'>
+              <Text>{item.displayName}</Text>
+              <Text>{item.address}</Text>
+            </View>
           </Pressable>
         )}
       />
@@ -47,7 +50,7 @@ export default observer(() => {
         options={{
           headerTitleAlign: 'center',
           headerRight(props) {
-            return <Feather name="rotate-ccw" size={24} color={props.tintColor} />;
+            return <Feather onPress={setup} name="rotate-ccw" size={24} color={props.tintColor} />;
           },
         }}
       />

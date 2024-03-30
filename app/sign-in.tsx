@@ -10,8 +10,14 @@ import { useSession } from '../providers/SessionProvider';
 export default function SignIn() {
   const [mnemonicInput, setMnemonicInput] = useState('');
   const { signIn } = useSession();
+  const [invalidMnemonic, setInvaliMnemonic] = useState(false)
 
   useEffect(() => {}, []);
+  setInvaliMnemonic(false)
+  const onchangetext = (text) => {
+    
+    setMnemonicInput(text)
+  }
 
   const onsignin = async () => {
     if (validateMnemonic(mnemonicInput.trim())) {
@@ -22,6 +28,7 @@ export default function SignIn() {
       signIn(user);
       router.replace('/(app)/');
     }
+    setInvaliMnemonic(true)
   };
   const oncreate = () => {
     router.push('/sign-up');
@@ -41,9 +48,13 @@ export default function SignIn() {
           onChangeText={setMnemonicInput}
           className="block w-full rounded-md py-2 px-3 border border-slate-300 focus:border-2 focus:border-slate-600"
         />
-        <Text className="text-right text-xs leading-5 text-gray-500">{counter}/24</Text>
+        { invalidMnemonic ?
+          (<Text className='text-start text-xs text-red-600'>please provide a valid seed</Text>):
+          (<Text className="text-right text-xs leading-5 text-gray-500">{counter}/24</Text>)
+        }
         <Pressable
           onPress={onsignin}
+          disabled={counter < 24}
           className="flex w-full justify-center rounded-md bg-slate-950 px-3 py-2.5 mt-4">
           <Text className="text-sm font-semibold leading-6 text-white text-center">import</Text>
         </Pressable>

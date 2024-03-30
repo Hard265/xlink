@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite/next';
 import _ from 'lodash';
-import { action, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 
 interface User {
   readonly address: string;
@@ -68,8 +68,22 @@ class Message {
 }
 
 class Store {
-  async initializeUser(db: SQLiteDatabase, address: string) {
-    return await db.getFirstAsync<User>('SELECT * FROM users WHERE address = ?', address);
+  initializeUsers(db: SQLiteDatabase) {
+    this.proxy(async ()=>{
+      this.users = _.unionBy(this.users, await db.getAllAsync('SELECT * FROM users'), "address");
+    });
+  }
+  
+  initializeUser(db: SQLiteDatabase, address: string) {
+    this.proxy(async ()=>{
+      this.users = _.unionBy(this.messages, await db.getFirstAsync<User>('SELECT * FROM users WHERE address = ?', address),"address");
+    })
+  }
+  
+  initializeChat(db: SQLiteDatabase, chatId: string) {
+    this.proxy(async ()=>{
+      this.messages = _.unionBy(this.messages, await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', chatId), "id")
+    })
   }
 
   users: User[] = [];
@@ -77,12 +91,17 @@ class Store {
   constructor() {
     makeObservable(this, {
       users: observable,
+      users: computed,
       messages: observable,
       addUser: action,
       addMessage: action,
+      initializeUser: action,
+      initializeUsers: action,
+      initializeChat: action,
       proxy: action,
     });
   }
+  
 
   async addUser(db: SQLiteDatabase, user: User) {
     try {
