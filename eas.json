@@ -1,5 +1,9 @@
 {
-  "production": {
-    "resourceClass": "large"
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    }
   }
 }
