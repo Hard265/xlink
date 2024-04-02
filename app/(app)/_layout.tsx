@@ -15,12 +15,7 @@ export default function AppLayout() {
 
   return (
     <Stack>
-      <Stack.Screen
-        name="scan"
-        options={{
-          presentation: 'modal',
-        }}
-      />
+      <Stack.Screen name="[address]" options={{ headerShown: false }} />
     </Stack>
   );
 }

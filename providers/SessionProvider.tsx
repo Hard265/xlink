@@ -33,7 +33,7 @@ export function SessionProvider(props: React.PropsWithChildren) {
   const db = useSQLiteContext();
 
   const onsignin = (user: BaseUser) => {
-    db.runSync('INSERT INTO users (address, displayName, publicKey) VALUES (?, ?, ?)', [
+    db.runSync('INSERT OR IGNORE INTO users (address, displayName, publicKey) VALUES (?, ?, ?)', [
       user.address,
       user.displayName,
       user.publicKey,

@@ -13,7 +13,7 @@ import store, { Message, User } from '../../../store/store';
 import { sortedArrayString } from '../../../utilities';
 
 export default observer(() => {
-  const { address } = useLocalSearchParams();
+  const { address } = useLocalSearchParams<{ address: string }>();
   const db = useSQLiteContext();
   const { session } = useSession();
 
@@ -36,6 +36,7 @@ export default observer(() => {
 
   const sectionedMessages = _.chain(store.messages)
     .filter(['chatId', chat_id])
+    .orderBy((m) => new Date(m.timestamp).getTime(), 'desc')
     .groupBy((message) => dayjs(message.timestamp).format('YYYY-MM-DD'))
     .map((messages, key) => ({ title: key, data: messages }))
     .value();
@@ -63,38 +64,37 @@ export default observer(() => {
   };
   return (
     <View className="flex-1 items-center justify-center">
-      <View className="flex-1 p-1.5">
-        <SectionList
-          ListFooterComponent={
-            display_save_address_modal ? (
-              <ListFooterComponent ondimiss={() => setShowSave(false)} onsave={onsave} />
-            ) : null
-          }
-          sections={sectionedMessages}
-          keyExtractor={(item) => item.id}
-          renderItem={ItemRenderer}
-          renderSectionFooter={SectionFooterRenderer}
-          inverted
-        />
-      </View>
+      <SectionList
+        className="flex-1 w-full"
+        ListFooterComponent={
+          display_save_address_modal ? (
+            <ListFooterComponent ondimiss={() => setShowSave(false)} onsave={onsave} />
+          ) : null
+        }
+        sections={sectionedMessages}
+        keyExtractor={(item) => item.id}
+        renderItem={ItemRenderer}
+        renderSectionFooter={SectionFooterRenderer}
+        inverted
+      />
       <View className="flex flex-row gap-x-2 p-2">
         <TextInput
           value={messageText}
           onChangeText={setMessageText}
           placeholder="Type your message here..."
-          className="border border-gray-300 px-4 py-2 rounded-xl bg-slate-200"
+          className="flex-1  border-gray-300 px-4 py-2 rounded-xl bg-slate-200"
         />
         <Pressable
           onPress={onsend}
-          className="flex items-center justify-between rounded-xl bg-slate-500 p-2 mt-2">
+          className="flex items-center justify-between rounded-xl bg-slate-800 p-3">
           <Text className="text-slate-50">
-            <Feather name="arrow-up" size={20} />
+            <Feather name="arrow-up" size={24} />
           </Text>
         </Pressable>
       </View>
       <Stack.Screen
         options={{
-          //@ts-ignore
+          title: user ? user.displayName : address,
           headerRight(props) {
             return <Feather name="user" size={24} color={props.tintColor} />;
           },
@@ -110,8 +110,8 @@ const ItemRenderer = ({ item }: { item: Message }) => {
   // Render message based on sender
   if (item.sender === session?.address) {
     return (
-      <Pressable className="flex items-end justify-center">
-        <View className="p-3 bg-slate-200 rounded-lg mb-2">
+      <Pressable className="flex items-end justify-center w-full p-2 py-0.5">
+        <View className="p-4 px-4.5 bg-slate-200 rounded-lg mb-2">
           <Text>{item.content}</Text>
         </View>
       </Pressable>
@@ -127,7 +127,7 @@ const ItemRenderer = ({ item }: { item: Message }) => {
 };
 
 const SectionFooterRenderer = ({ section }: { section: { title: string; data: Message[] } }) => (
-  <View className="flex-row justify-between items-center p-2">
+  <View className="flex-row justify-center items-center p-2">
     <Text className="text-slate-500">{section.title}</Text>
   </View>
 );

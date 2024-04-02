@@ -68,24 +68,25 @@ class Message {
 }
 
 class Store {
-  initializeRecents(db: SQLiteDatabase) {
-    this.proxy(async () => {
-      const messages = await db.getAllAsync<Message>(`SELECT m.*
-      FROM messages m
-      INNER JOIN (
-        SELECT sender, receiver, MAX(timestamp) AS latest_timestamp
-        FROM messages
-        GROUP BY sender, receiver
-      ) latest ON m.sender = latest.sender 
-          AND m.receiver = latest.receiver 
-          AND m.timestamp = latest.latest_timestamp;`);
+  async initializeRecents(db: SQLiteDatabase) {
+    const messages = await db.getAllAsync<Message>(`SELECT m.*
+    FROM messages m
+    INNER JOIN (
+      SELECT sender, receiver, MAX(timestamp) AS latest_timestamp
+      FROM messages
+      GROUP BY sender, receiver
+    ) latest ON m.sender = latest.sender 
+        AND m.receiver = latest.receiver 
+        AND m.timestamp = latest.latest_timestamp;`);
+    this.proxy(() => {
       this.messages = _.unionBy(this.messages, messages, 'id');
     });
   }
 
-  initializeUsers(db: SQLiteDatabase) {
-    this.proxy(async () => {
-      this.users = _.unionBy(this.users, await db.getAllAsync('SELECT * FROM users'), 'address');
+  async initializeUsers(db: SQLiteDatabase) {
+    const users = await db.getAllAsync<User>('SELECT * FROM users');
+    this.proxy(() => {
+      this.users = _.unionBy(this.users, users, 'address');
     });
   }
 
@@ -99,13 +100,11 @@ class Store {
     });
   }
 
-  initializeChat(db: SQLiteDatabase, chatId: string) {
-    this.proxy(async () => {
-      this.messages = _.unionBy(
-        this.messages,
-        await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', chatId),
-        'id',
-      );
+  async initializeChat(db: SQLiteDatabase, chatId: string) {
+    const chat = await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', chatId);
+
+    this.proxy(() => {
+      this.messages = _.unionBy(this.messages, chat, 'id');
     });
   }
 
@@ -117,8 +116,9 @@ class Store {
       messages: observable,
       addUser: action,
       addMessage: action,
-      initializeUser: action,
+      initializeRecents: action,
       initializeUsers: action,
+      initializeUser: action,
       initializeChat: action,
       proxy: action,
     });
