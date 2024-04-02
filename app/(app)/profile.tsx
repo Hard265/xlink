@@ -1,11 +1,13 @@
 import { Feather } from '@expo/vector-icons';
+import { observer } from 'mobx-react';
+import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { useSession } from '../../providers/SessionProvider';
 import { copyToClipboard } from '../../utilities';
 
-export default function Page() {
+export default observer(() => {
   const { session, signOut } = useSession();
 
   const onsignout = () => {
@@ -36,4 +38,4 @@ export default function Page() {
       </Pressable>
     </View>
   );
-}
+});

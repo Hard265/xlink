@@ -1,6 +1,7 @@
-import { View } from 'react-native';
+import { CameraView } from 'expo-camera/next';
 import { Link, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 
 export default function ScanModal() {
   // If the page was reloaded or navigated to directly, then the modal should be presented as
@@ -9,9 +10,9 @@ export default function ScanModal() {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <CameraView>
-      {/* Use `../` as a simple way to navigate to the root. This is not analogous to "goBack". */}
-      {!isPresented && <Link href="../">Dismiss</Link>}
-     </CameraView>
+        {/* Use `../` as a simple way to navigate to the root. This is not analogous to "goBack". */}
+        {!isPresented && <Link href="../">Dismiss</Link>}
+      </CameraView>
       {/* Native modals have dark backgrounds on iOS, set the status bar to light content. */}
       <StatusBar style="auto" />
     </View>

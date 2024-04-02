@@ -1,17 +1,16 @@
 import { Feather } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import * as crypto from 'expo-crypto';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { View, TextInput, Pressable, Text, SectionList } from 'react-native';
 
-import ChatMessagesList from '../../components/ChatMessagesList';
-import { useSession } from '../../providers/SessionProvider';
-import store, { Message, User } from '../../store/store';
-import { sortedArrayString } from '../../utilities';
+import { useSession } from '../../../providers/SessionProvider';
+import store, { Message, User } from '../../../store/store';
+import { sortedArrayString } from '../../../utilities';
 
 export default observer(() => {
   const { address } = useLocalSearchParams();
@@ -63,8 +62,8 @@ export default observer(() => {
     );
   };
   return (
-    <View>
-      <View>
+    <View className="flex-1 items-center justify-center">
+      <View className="flex-1 p-1.5">
         <SectionList
           ListFooterComponent={
             display_save_address_modal ? (
@@ -78,7 +77,7 @@ export default observer(() => {
           inverted
         />
       </View>
-      <View>
+      <View className="flex flex-row gap-x-2 p-2">
         <TextInput
           value={messageText}
           onChangeText={setMessageText}
@@ -93,6 +92,14 @@ export default observer(() => {
           </Text>
         </Pressable>
       </View>
+      <Stack.Screen
+        options={{
+          //@ts-ignore
+          headerRight(props) {
+            return <Feather name="user" size={24} color={props.tintColor} />;
+          },
+        }}
+      />
     </View>
   );
 });

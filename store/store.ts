@@ -124,20 +124,30 @@ class Store {
     });
   }
 
-  async addUser(db: SQLiteDatabase, user: User) {
+  async addUser(db: SQLiteDatabase, u: User) {
     try {
-      db.runAsync(
+      await db.runAsync(
         'INSERT INTO users(address, displayName, publicKey) VALUES (?, ?, ?)',
-        user.address,
-        user.displayName,
-        user.publicKey,
+        u.address,
+        u.displayName,
+        u.publicKey,
       );
-      this.proxy(() => (this.users = _.union(this.users, [user])));
+      this.proxy(() => (this.users = _.union(this.users, [u])));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }
     return true;
+  }
+
+  /**
+   * delete a given user from the database and the store
+   * @param db database instance
+   * @param a target user address
+   */
+  async deleteUser(db: SQLiteDatabase, a: string) {
+    await db.runAsync('DELETE FROM users WHERE address = ?', a);
+    this.proxy(() => (this.users = _.reject(this.users, (u) => u.address === a)));
   }
 
   async addMessage(db: SQLiteDatabase, message: Message) {

@@ -1,3 +1,4 @@
+import { useSQLiteContext } from 'expo-sqlite/next';
 import React from 'react';
 
 import { useStorageState } from './useStorageState';
@@ -29,18 +30,27 @@ export function useSession() {
 
 export function SessionProvider(props: React.PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
+  const db = useSQLiteContext();
 
   const onsignin = (user: BaseUser) => {
+    db.runSync('INSERT INTO users (address, displayName, publicKey) VALUES (?, ?, ?)', [
+      user.address,
+      user.displayName,
+      user.publicKey,
+    ]);
     setSession(user.toJson());
+  };
+
+  const onsignout = () => {
+    db.runSync('DELETE FROM users; DELETE FROM messages; VACUUM;');
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         signIn: onsignin,
-        signOut: () => {
-          setSession(null);
-        },
+        signOut: onsignout,
         session: session ? BaseUser.fromJson(JSON.parse(session)) : null,
         isLoading,
       }}>
