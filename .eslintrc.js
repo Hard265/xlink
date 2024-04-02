@@ -1,7 +1,4 @@
 module.exports = {
-    root: true,
-    extends: [
-      'universe/native',
-    ],
-  };
-  
+  root: true,
+  extends: ['universe/native'],
+};

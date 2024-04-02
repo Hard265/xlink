@@ -16,12 +16,11 @@ export default function AppLayout() {
   return (
     <Stack>
       <Stack.Screen
-                name="scan"
-                options={{
-                  // Set the presentation mode to modal for our modal route.
-                  presentation: 'modal',
-                }}
-              />
-            </Stack>
+        name="scan"
+        options={{
+          presentation: 'modal',
+        }}
+      />
+    </Stack>
   );
 }

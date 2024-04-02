@@ -2,20 +2,21 @@ import { Feather } from '@expo/vector-icons';
 import { Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import { observer } from 'mobx-react';
-import { Button, FlatList, Pressable, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { FlatList, OpaqueColorValue, Pressable, Text, View } from 'react-native';
 
-import store, { User } from '../../store/store';
+import store from '../../store/store';
 
 export default observer(() => {
   const db = useSQLiteContext();
-  
-  const setup = ()=>{
+
+  const setup = () => {
     store.initializeUsers(db);
-  }
-  
-  useEffect(()=>{
+  };
+
+  useEffect(() => {
     setup();
-  },[]);
+  }, []);
 
   const onnavigate = ({ address, displayName }: { address: string; displayName: string }) => {
     //@ts-ignore
@@ -36,10 +37,9 @@ export default observer(() => {
         renderItem={({ item }) => (
           <Pressable
             onPress={() => onnavigate({ address: item.address, displayName: item.displayName })}
-            className='w-full px-2 py-0.5 flex flex-row gap-x-2 items-center'
-          >
-            <View className="p-4 rounded-full bg-gray-200"/>
-            <View class='flex-1 flex flex-col items-start'>
+            className="w-full px-2 py-0.5 flex flex-row gap-x-2 items-center">
+            <View className="p-4 rounded-full bg-gray-200" />
+            <View className="flex-1 flex flex-col items-start">
               <Text>{item.displayName}</Text>
               <Text>{item.address}</Text>
             </View>
@@ -49,7 +49,7 @@ export default observer(() => {
       <Stack.Screen
         options={{
           headerTitleAlign: 'center',
-          headerRight(props) {
+          headerRight(props: { tintColor: string | OpaqueColorValue | undefined }) {
             return <Feather onPress={setup} name="rotate-ccw" size={24} color={props.tintColor} />;
           },
         }}

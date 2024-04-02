@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite/next';
 import _ from 'lodash';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 
 interface User {
   readonly address: string;
@@ -68,22 +68,45 @@ class Message {
 }
 
 class Store {
-  initializeUsers(db: SQLiteDatabase) {
-    this.proxy(async ()=>{
-      this.users = _.unionBy(this.users, await db.getAllAsync('SELECT * FROM users'), "address");
+  initializeRecents(db: SQLiteDatabase) {
+    this.proxy(async () => {
+      const messages = await db.getAllAsync<Message>(`SELECT m.*
+      FROM messages m
+      INNER JOIN (
+        SELECT sender, receiver, MAX(timestamp) AS latest_timestamp
+        FROM messages
+        GROUP BY sender, receiver
+      ) latest ON m.sender = latest.sender 
+          AND m.receiver = latest.receiver 
+          AND m.timestamp = latest.latest_timestamp;`);
+      this.messages = _.unionBy(this.messages, messages, 'id');
     });
   }
-  
-  initializeUser(db: SQLiteDatabase, address: string) {
-    this.proxy(async ()=>{
-      this.users = _.unionBy(this.messages, await db.getFirstAsync<User>('SELECT * FROM users WHERE address = ?', address),"address");
-    })
+
+  initializeUsers(db: SQLiteDatabase) {
+    this.proxy(async () => {
+      this.users = _.unionBy(this.users, await db.getAllAsync('SELECT * FROM users'), 'address');
+    });
   }
-  
+
+  initializeUser(db: SQLiteDatabase, address: string) {
+    this.proxy(async () => {
+      this.users = _.unionBy(
+        this.users,
+        _.compact([await db.getFirstAsync<User>('SELECT * FROM users WHERE address = ?', address)]),
+        'address',
+      );
+    });
+  }
+
   initializeChat(db: SQLiteDatabase, chatId: string) {
-    this.proxy(async ()=>{
-      this.messages = _.unionBy(this.messages, await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', chatId), "id")
-    })
+    this.proxy(async () => {
+      this.messages = _.unionBy(
+        this.messages,
+        await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', chatId),
+        'id',
+      );
+    });
   }
 
   users: User[] = [];
@@ -100,7 +123,6 @@ class Store {
       proxy: action,
     });
   }
-  
 
   async addUser(db: SQLiteDatabase, user: User) {
     try {

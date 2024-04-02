@@ -1,14 +1,23 @@
 import { Feather } from '@expo/vector-icons';
 import { Stack, router } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { View, Text, FlatList, Pressable, Button } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, FlatList, Pressable } from 'react-native';
 
 import { useSession } from '../../providers/SessionProvider';
 import store from '../../store/store';
 
 export default observer(() => {
-  const { session, signOut } = useSession();
+  const { session } = useSession();
+  const db = useSQLiteContext();
+
+  useEffect(() => {
+    store.initializeUsers(db);
+    store.initializeRecents(db);
+  }, [session]);
+
   const data = _.chain(store.messages)
     .clone()
     .orderBy(
@@ -58,6 +67,7 @@ export default observer(() => {
       </Pressable>
       <Stack.Screen
         options={{
+          //@ts-ignore
           headerRight(props) {
             return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
           },
