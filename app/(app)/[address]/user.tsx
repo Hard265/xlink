@@ -25,7 +25,7 @@ export default observer(() => {
     <View className="flex flex-col items-center justify-center h-full w-full">
       {/**user delete button + prompt */}
       <Pressable
-        className="flex items-center bg-red-600 border border-red-700 p-2.3 w-full"
+        className="flex items-center bg-red-600 border border-red-700 p-2 w-full"
         onPress={() => setModalVisible(true)}>
         <Text className="text-red-200 font-medium">Delete {user ? user.displayName : address}</Text>
       </Pressable>

@@ -37,7 +37,9 @@ export default observer(() => {
     <View className="items-center justify-center flex-1">
       <FlatList
         data={data}
-        className="w-full"
+        className="w-full bg-white"
+        ListEmptyComponent={<ListEmptyComponent />}
+        ListHeaderComponent={<Text className="font-medium" />}
         renderItem={({ item }) => {
           const address = item.sender === session?.address ? item.receiver : item.sender;
           const user = _.find(store.users, address);
@@ -46,7 +48,7 @@ export default observer(() => {
           };
 
           return (
-            <Pressable className="flex flex-row gap-x-2 px-2 py-0.5 bg-white" onPress={onpress}>
+            <Pressable className="flex flex-row gap-x-2 px-2 py-0.5" onPress={onpress}>
               <View className="rounded-full bg-slate-200 p-6" />
               <View className="flex-1 flex flex-col">
                 <View className="flex flex-row justify-between items-center">
@@ -69,6 +71,7 @@ export default observer(() => {
       <Stack.Screen
         options={{
           title: '',
+          //@ts-ignore
           headerRight(props) {
             return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
           },
@@ -77,3 +80,11 @@ export default observer(() => {
     </View>
   );
 });
+
+const ListEmptyComponent = () => {
+  return (
+    <View>
+      <Text>No recent chats</Text>
+    </View>
+  );
+};
