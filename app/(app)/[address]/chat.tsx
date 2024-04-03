@@ -14,50 +14,57 @@ import { sortedArrayString } from '../../../utilities';
 
 export default observer(() => {
   const { address, publicKey } = useLocalSearchParams<{
+    // This object represents the address and publicKey variables
     address: string;
     publicKey: string;
   }>();
+  // This object represents the database context
   const db = useSQLiteContext();
+  // This object represents the current session
   const { session } = useSession();
 
+  // This object represents the content state
   const [content, setContent] = useState('');
 
+  // This function returns the user object, given the address
   const user: User | null = _.find(store.users, ['address', address]) || null;
 
+  // This function initializes the user, if they don't exist
   useEffect(() => {
-    function setup() {
-      if (!_.find(store.users, ['address', address])) {
-        store.initializeUser(db, address as string);
-      }
+    // Check if the user exists
+    if (!_.find(store.users, ['address', address])) {
+      // If not, initialize the user
+      store.initializeUser(db, address as string);
     }
-    setup();
   }, [address]);
 
+  // This variable represents the sorted array of strings
   const chat_id = sortedArrayString([session?.address as string, address as string]);
 
+  // This variable represents the sectioned messages, given the chat_id
   const sectionedMessages = _.chain(store.messages)
+    // Filter the messages by the chat_id
     .filter((m) => m.chatId === chat_id)
+    // Order the messages by the timestamp, in descending order
     .orderBy((m) => new Date(m.timestamp).getTime(), 'desc')
+    // Group the messages by the day
     .groupBy((message) => dayjs(message.timestamp).format('YYYY-MM-DD'))
+    // Map the messages to an object, with a title and data
     .map((messages, key) => ({ title: key, data: messages }))
+    // Return the mapped object
     .value();
 
+  // This function represents the onsend event
   const onsend = () => {
-    store.addMessage(
-      db,
-      Message.fromJson({
-        id: crypto.randomUUID(),
-        chatId: chat_id,
-        content,
-        receiver: address as string,
-        sender: session?.address as string,
-        timestamp: dayjs().toISOString(),
-      }),
-    );
+    // Add the message to the store
+    store.addMessage(db, session?.address as string, address as string, content);
+    // Set the content to an empty string
     setContent('');
   };
 
+  // This function represents the onsave event
   const onsave = () => {
+    // Add the user to the store
     store.addUser(
       db,
       User.fromJson({ address: address as string, displayName: 'Unknown', publicKey }),
@@ -67,21 +74,31 @@ export default observer(() => {
     <View className="flex-1 items-center justify-center">
       <SectionList
         className="flex-1 w-full"
+        // If the user is not logged in, render the ListFooterComponent, otherwise render nothing
         ListFooterComponent={!user ? <ListFooterComponent onsave={onsave} /> : null}
+        // Pass the sectionedMessages array to the SectionList component
         sections={sectionedMessages}
+        // Generate a key for each item in the list
         keyExtractor={(item) => item.id}
+        // Pass the ItemRenderer function to the SectionList component
         renderItem={ItemRenderer}
+        // Pass the SectionFooterRenderer function to the SectionList component
         renderSectionFooter={SectionFooterRenderer}
+        // Render the list in reverse order
         inverted
       />
       <View className="flex flex-row gap-x-2 p-2">
         <TextInput
+          // Set the value of the input field to the content
           value={content}
+          // Update the content when the input field value changes
           onChangeText={setContent}
+          // Set the placeholder text of the input field
           placeholder="Type your message here..."
           className="flex-1  border-gray-300 px-4 py-2 rounded-xl bg-slate-200"
         />
         <Pressable
+          // Send the message when the pressable component is pressed
           onPress={onsend}
           className="flex items-center justify-between rounded-xl bg-slate-800 p-3">
           <Text className="text-slate-50">
@@ -90,6 +107,7 @@ export default observer(() => {
         </Pressable>
       </View>
       <Stack.Screen
+        // Set the title of the screen based on whether the user is logged in or not
         options={{
           title: user ? user.displayName : address,
           //@ts-ignore

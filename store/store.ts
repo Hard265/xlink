@@ -1,6 +1,10 @@
+import dayjs from 'dayjs';
+import { randomUUID } from 'expo-crypto';
 import { SQLiteDatabase } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { action, makeObservable, observable } from 'mobx';
+
+import { sortedArrayString } from '../utilities';
 
 interface User {
   readonly address: string;
@@ -69,6 +73,7 @@ class Message {
 
 class Store {
   async initializeRecents(db: SQLiteDatabase) {
+    // Get all messages from the database
     const messages = await db.getAllAsync<Message>(`SELECT m.*
     FROM messages m
     INNER JOIN (
@@ -78,20 +83,26 @@ class Store {
     ) latest ON m.sender = latest.sender 
         AND m.receiver = latest.receiver 
         AND m.timestamp = latest.latest_timestamp;`);
+    // Union the messages with the current message array
     this.proxy(() => {
       this.messages = _.unionBy(this.messages, messages, 'id');
     });
   }
 
+  // Asynchronously initialize the users table
   async initializeUsers(db: SQLiteDatabase) {
+    // Get all users from the database
     const users = await db.getAllAsync<User>('SELECT * FROM users');
+    // Union the users from the database with the current users
     this.proxy(() => {
       this.users = _.unionBy(this.users, users, 'address');
     });
   }
 
+  // Initializes the user with the given address.
   initializeUser(db: SQLiteDatabase, address: string) {
     this.proxy(async () => {
+      // Union the given address with the existing users in the proxy.
       this.users = _.unionBy(
         this.users,
         _.compact([await db.getFirstAsync<User>('SELECT * FROM users WHERE address = ?', address)]),
@@ -100,9 +111,12 @@ class Store {
     });
   }
 
+  // Initializes the chat with the given chatId.
   async initializeChat(db: SQLiteDatabase, chatId: string) {
+    // Get all messages in the chat.
     const chat = await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', chatId);
 
+    // Union the messages with the existing messages in the proxy.
     this.proxy(() => {
       this.messages = _.unionBy(this.messages, chat, 'id');
     });
@@ -124,19 +138,31 @@ class Store {
     });
   }
 
+  // Asynchronously adds a user to the database
+  // with the given address, display name, and public key
+  /**
+   * Adds a new user to the database and the store
+   * @param db database instance
+   * @param u the user object to add
+   * @returns a boolean indicating if the operation was successful
+   */
   async addUser(db: SQLiteDatabase, u: User) {
     try {
+      // Insert the user into the users table of the database
       await db.runAsync(
         'INSERT INTO users(address, displayName, publicKey) VALUES (?, ?, ?)',
         u.address,
         u.displayName,
         u.publicKey,
       );
+      // Union the current list of users with the new user
       this.proxy(() => (this.users = _.union(this.users, [u])));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
+      // Return false if an error occurs
       return false;
     }
+    // Return true if the user is successfully added
     return true;
   }
 
@@ -150,7 +176,23 @@ class Store {
     this.proxy(() => (this.users = _.reject(this.users, (u) => u.address === a)));
   }
 
-  async addMessage(db: SQLiteDatabase, message: Message) {
+  /**
+   * Adds a new message to the database and the store
+   * @param db database instance
+   * @param sender the sender's address
+   * @param receiver the receiver's address
+   * @param content the message content
+   * @returns a boolean indicating if the operation was successful
+   */
+  async addMessage(db: SQLiteDatabase, sender: string, receiver: string, content: string) {
+    const message = Message.fromJson({
+      id: randomUUID(),
+      chatId: sortedArrayString([sender, receiver]),
+      sender,
+      receiver,
+      content,
+      timestamp: dayjs().toISOString(),
+    });
     try {
       await db.runAsync(
         'INSERT INTO messages (id, chatId, sender, receiver, content, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
@@ -169,6 +211,10 @@ class Store {
     return true;
   }
 
+  /**
+   * Proxy function to update the store state
+   * @param cb - callback function to execute when the state is updated
+   */
   proxy(cb: () => void) {
     cb();
   }
