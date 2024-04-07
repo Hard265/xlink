@@ -14,8 +14,7 @@ export default observer(() => {
   const db = useSQLiteContext();
 
   useEffect(() => {
-    store.initializeUsers(db);
-    store.initializeRecents(db);
+    store.loadRecents(db);
   }, [session]);
 
   const data = _.chain(store.messages)
@@ -37,6 +36,7 @@ export default observer(() => {
     <View className="items-center justify-center flex-1">
       <FlatList
         data={data}
+        contentContainerStyle={{ alignItems: 'center', height: '100%' }}
         className="w-full bg-white"
         ListEmptyComponent={<ListEmptyComponent />}
         ListHeaderComponent={<Text className="font-medium" />}
@@ -48,14 +48,18 @@ export default observer(() => {
           };
 
           return (
-            <Pressable className="flex flex-row gap-x-2 px-2 py-0.5" onPress={onpress}>
+            <Pressable
+              className="w-full flex flex-row gap-x-2 px-2 py-0.5 items-start"
+              onPress={onpress}>
               <View className="rounded-full bg-slate-200 p-6" />
-              <View className="flex-1 flex flex-col">
+              <View className="flex-1 flex flex-col self-center">
                 <View className="flex flex-row justify-between items-center">
-                  <Text>{user ? user.displayName : address}</Text>
+                  <Text>{address}</Text>
                 </View>
                 <View>
-                  <Text>{item.content}</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail">
+                    {item.content}
+                  </Text>
                 </View>
               </View>
             </Pressable>
@@ -65,7 +69,7 @@ export default observer(() => {
       />
       <Link className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-xl" href="/(app)/users">
         <Text className="text-gray-50">
-          <Feather name="message-square" size={24} />
+          <Feather name="plus" size={24} />
         </Text>
       </Link>
       <Stack.Screen
@@ -83,7 +87,7 @@ export default observer(() => {
 
 const ListEmptyComponent = () => {
   return (
-    <View>
+    <View className="my-auto">
       <Text>No recent chats</Text>
     </View>
   );

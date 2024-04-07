@@ -8,35 +8,19 @@ import { useEffect } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { useSession } from '../../providers/SessionProvider';
-import store, { User } from '../../store/store';
+import store from '../../store/store';
 
 export default observer(() => {
   const db = useSQLiteContext();
   const { session } = useSession();
 
-  const setup = () => {
-    store.initializeUsers(db);
-  };
-
-  useEffect(() => {
-    setup();
-  }, []);
-
-  const onnavigate = ({ address, displayName }: { address: string; displayName: string }) => {
-    router.replace(`/(app)/${address}/chat?displayName=${displayName}`);
-  };
-
   const users = _.filter(store.users, (user) => user.address !== session?.address);
 
   const onscan = () => {
-    store.addUser(
-      db,
-      User.fromJson({
-        address: randomUUID(),
-        displayName: 'new user',
-        publicKey: 'public key',
-      }),
-    );
+    store.addUser(db, {
+      address: randomUUID(),
+      publicKey: 'public key',
+    });
   };
   return (
     <View className="flex-1 p-2">
@@ -53,11 +37,12 @@ export default observer(() => {
         data={users}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => onnavigate({ address: item.address, displayName: item.displayName })}
+            onPress={() => router.replace(`/(app)/${item.address}/chat`)}
             className="w-full py-1 flex flex-row gap-x-2 items-center">
-            <View className="p-6 rounded-full bg-gray-200" />
+            <View className="p-2 px-4 rounded-full bg-gray-200">
+              <Text className="text-xl uppercase">{item.address.substring(0, 1)}</Text>
+            </View>
             <View className="flex-1 flex flex-col items-start">
-              <Text>{item.displayName}</Text>
               <Text>{item.address}</Text>
             </View>
           </Pressable>
@@ -67,7 +52,7 @@ export default observer(() => {
         options={{
           headerTitleAlign: 'center',
           headerRight(props) {
-            return <Feather onPress={setup} name="rotate-ccw" size={24} color={props.tintColor} />;
+            return <Feather name="rotate-ccw" size={24} color={props.tintColor} />;
           },
         }}
       />

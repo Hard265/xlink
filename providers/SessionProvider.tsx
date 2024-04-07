@@ -2,12 +2,12 @@ import { useSQLiteContext } from 'expo-sqlite/next';
 import React from 'react';
 
 import { useStorageState } from './useStorageState';
-import { BaseUser } from '../store/store';
+import { Admin } from '../store/store';
 
 const AuthContext = React.createContext<{
-  signIn: (user: BaseUser) => void;
+  signIn: (user: Admin) => void;
   signOut: () => void;
-  session?: BaseUser | null;
+  session?: Admin | null;
   isLoading: boolean;
 }>({
   signIn: () => null,
@@ -32,13 +32,12 @@ export function SessionProvider(props: React.PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
   const db = useSQLiteContext();
 
-  const onsignin = (user: BaseUser) => {
-    db.runSync('INSERT OR IGNORE INTO users (address, displayName, publicKey) VALUES (?, ?, ?)', [
+  const onsignin = (user: Admin) => {
+    db.runSync('INSERT OR IGNORE INTO users (address, publicKey) VALUES (?, ?)', [
       user.address,
-      user.displayName,
       user.publicKey,
     ]);
-    setSession(user.toJson());
+    setSession(JSON.stringify(user));
   };
 
   const onsignout = () => {
@@ -51,7 +50,7 @@ export function SessionProvider(props: React.PropsWithChildren) {
       value={{
         signIn: onsignin,
         signOut: onsignout,
-        session: session ? BaseUser.fromJson(JSON.parse(session)) : null,
+        session: session ? JSON.parse(session) : null,
         isLoading,
       }}>
       {props.children}

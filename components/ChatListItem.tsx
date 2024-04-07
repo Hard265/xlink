@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { User } from '../store/store';
+import { User } from '../store/__store';
 
 interface ChatListItemProps {
   item: User;

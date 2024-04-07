@@ -3,7 +3,7 @@ import { PrivateKey } from 'eciesjs';
 import { entropyToMnemonic, mnemonicToEntropy } from '../../encryption/bip39';
 import { sign, verify } from '../../encryption/cryptography';
 import { generateKeyPair, createUser } from '../../encryption/key';
-import { User } from '../../store/store';
+import { User } from '../../store/__store';
 
 describe('keys', () => {
   it('should generate hd key', async () => {

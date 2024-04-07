@@ -8,6 +8,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { SessionProvider } from '../providers/SessionProvider';
 import { SocketProvider } from '../providers/SocketProvider';
 import { databaseInit } from '../store/databaseInit';
+import { db_name } from '../utilities/constants';
 
 export default function Root() {
   const socketUrl = '';
@@ -19,7 +20,7 @@ export default function Root() {
           <ActivityIndicator size="large" color="#000" />
         </View>
       }>
-      <SQLiteProvider databaseName="test2.db" onInit={databaseInit} useSuspense>
+      <SQLiteProvider databaseName={db_name} onInit={databaseInit} useSuspense>
         <SessionProvider>
           <SocketProvider url={socketUrl}>
             <Slot />

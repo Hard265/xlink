@@ -5,7 +5,7 @@ import React from 'react';
 import { Button, SectionList, Text, View } from 'react-native';
 
 import { useSession } from '../providers/SessionProvider';
-import { Message, User } from '../store/store';
+import { Message, User } from '../store/__store';
 
 interface ChatMessagesListProps {
   messages: Message[];

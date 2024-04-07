@@ -22,29 +22,27 @@ export default observer(() => {
   };
 
   return (
-    <View className="flex flex-col items-center justify-center h-full w-full">
+    <View className="flex flex-col items-center justify-center h-full w-full p-2">
       {/**user delete button + prompt */}
       <Pressable
-        className="flex items-center bg-red-600 border border-red-700 p-2 w-full"
+        className="flex items-center bg-red-600 border border-red-700 p-2 w-full rounded-xl mt-auto"
         onPress={() => setModalVisible(true)}>
-        <Text className="text-red-200 font-medium">Delete {user ? user.displayName : address}</Text>
+        <Text className="text-red-200 font-medium">Delete {address}</Text>
       </Pressable>
       <Modal
         visible={modalVisible}
-        transparent
         onRequestClose={() => setModalVisible(false)}
+        supportedOrientations={['portrait', 'portrait-upside-down']}
         animationType="fade">
         <View className="mx-4 my-auto">
           <View className="border border-slate-300 bg-slate-200 p-4 rounded-lg">
-            <Text className="text-slate-600">
-              Are you sure you want to delete {user ? user.displayName : address}?
-            </Text>
+            <Text className="text-slate-600">Are you sure you want to delete {address}?</Text>
             <View className="flex flex-row gap-x-2">
-              <Pressable className="" onPress={() => setModalVisible(false)}>
+              <Pressable className="flex-1" onPress={() => setModalVisible(false)}>
                 <Text className="text-slate-600">Cancel</Text>
               </Pressable>
               <Pressable
-                className="bg-red-600 border border-red-700 p-2.5 w-full mt-4 p-2.5"
+                className="bg-red-600 border border-red-700 p-2 rounded-xl flex-1 mt-4"
                 onPress={ondelete}>
                 <Text className="text-red-200 font-medium">Delete</Text>
               </Pressable>
@@ -55,7 +53,7 @@ export default observer(() => {
 
       <Stack.Screen
         options={{
-          title: user ? user.displayName : address,
+          title: address,
         }}
       />
     </View>
