@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { randomUUID } from 'expo-crypto';
 import { Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
@@ -7,7 +8,7 @@ import { useEffect } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
 import { useSession } from '../../providers/SessionProvider';
-import store from '../../store/store';
+import store, { User } from '../../store/store';
 
 export default observer(() => {
   const db = useSQLiteContext();
@@ -22,16 +23,28 @@ export default observer(() => {
   }, []);
 
   const onnavigate = ({ address, displayName }: { address: string; displayName: string }) => {
-    router.push(`/(app)/${address}/chat?displayName=${displayName}`);
+    router.replace(`/(app)/${address}/chat?displayName=${displayName}`);
   };
 
   const users = _.filter(store.users, (user) => user.address !== session?.address);
 
+  const onscan = () => {
+    store.addUser(
+      db,
+      User.fromJson({
+        address: randomUUID(),
+        displayName: 'new user',
+        publicKey: 'public key',
+      }),
+    );
+  };
   return (
     <View className="flex-1 p-2">
       <FlatList
         ListHeaderComponent={
-          <Pressable className="flex w-full justify-center rounded-md bg-slate-300 px-3 py-2.5">
+          <Pressable
+            onPress={onscan}
+            className="flex w-full justify-center rounded-md bg-slate-300 px-3 py-2.5">
             <Text className="text-sm font-semibold leading-6 text-slate-950 text-center">
               scan address
             </Text>

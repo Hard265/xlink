@@ -138,8 +138,6 @@ class Store {
     });
   }
 
-  // Asynchronously adds a user to the database
-  // with the given address, display name, and public key
   /**
    * Adds a new user to the database and the store
    * @param db database instance
@@ -159,10 +157,8 @@ class Store {
       this.proxy(() => (this.users = _.union(this.users, [u])));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
-      // Return false if an error occurs
       return false;
     }
-    // Return true if the user is successfully added
     return true;
   }
 

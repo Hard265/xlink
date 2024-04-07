@@ -95,12 +95,12 @@ export default observer(() => {
           onChangeText={setContent}
           // Set the placeholder text of the input field
           placeholder="Type your message here..."
-          className="flex-1  border-gray-300 px-4 py-2 rounded-xl bg-slate-200"
+          className="flex-1  border-gray-300 px-4 py-2 rounded-full bg-slate-200"
         />
         <Pressable
           // Send the message when the pressable component is pressed
           onPress={onsend}
-          className="flex items-center justify-between rounded-xl bg-slate-800 p-3">
+          className="flex items-center justify-between rounded-full bg-slate-800 p-3">
           <Text className="text-slate-50">
             <Feather name="arrow-up" size={24} />
           </Text>

@@ -65,12 +65,12 @@ export default observer(() => {
       />
       <Link className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-xl" href="/(app)/users">
         <Text className="text-gray-50">
-          <Feather name="users" size={24} />
+          <Feather name="message-square" size={24} />
         </Text>
       </Link>
       <Stack.Screen
         options={{
-          title: '',
+          title: 'xlink',
           //@ts-ignore
           headerRight(props) {
             return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
