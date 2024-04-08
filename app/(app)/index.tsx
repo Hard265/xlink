@@ -14,6 +14,7 @@ export default observer(() => {
   const db = useSQLiteContext();
 
   useEffect(() => {
+    (async () => {})();
     store.loadRecents(db);
   }, [session]);
 

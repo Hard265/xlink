@@ -1,9 +1,12 @@
+import '../polyfills/text-encoding';
+import 'fast-text-encoding';
 import dayjs from 'dayjs';
 import { randomUUID } from 'expo-crypto';
 import { SQLiteDatabase, openDatabaseAsync } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { action, makeObservable, observable } from 'mobx';
 
+import { encrypt } from '../encryption/cryptography';
 import { sortedArrayString } from '../utilities';
 import { db_name } from '../utilities/constants';
 
@@ -41,13 +44,14 @@ class Store {
     }
   }
 
-  async addMessage(db: SQLiteDatabase, sender: string, receiver: string, content: string) {
+  async addMessage(db: SQLiteDatabase, session: Admin, receiver: User, content: string) {
     const message = {
       id: randomUUID(),
-      chatId: sortedArrayString([sender, receiver]),
-      sender,
-      content,
-      receiver,
+      chatId: sortedArrayString([session.address, receiver.address]),
+      sender: session.address,
+      content: encrypt(session.publicKey, content),
+      // content,
+      receiver: receiver.address,
       timestamp: dayjs().toISOString(),
     };
 
@@ -58,7 +62,8 @@ class Store {
           message.id,
           message.chatId,
           message.sender,
-          message.content,
+          // content,
+          encrypt(session.publicKey, content),
           message.receiver,
           message.timestamp,
         ],

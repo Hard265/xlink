@@ -1,13 +1,16 @@
 import { Feather } from '@expo/vector-icons';
+import { Buffer } from 'buffer';
 import dayjs from 'dayjs';
-import * as crypto from 'expo-crypto';
-import { Stack, router, useGlobalSearchParams, useLocalSearchParams } from 'expo-router';
+import { PrivateKey } from 'eciesjs';
+import { Stack, router, useGlobalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { View, TextInput, Pressable, Text, SectionList } from 'react-native';
 
+// import { decrypt } from '../../../encryption/cryptography';
+import { decrypt } from '../../../encryption/cryptography';
 import { useSession } from '../../../providers/SessionProvider';
 import store, { Message, User } from '../../../store/store';
 import { sortedArrayString } from '../../../utilities';
@@ -21,30 +24,44 @@ export default observer(() => {
   const { session } = useSession();
   const [content, setContent] = useState('');
 
-  const chat_id = sortedArrayString([session?.address as string, address as string]);
+  if (!session) {
+    return null;
+  }
+
+  const chat_id = sortedArrayString([session.address, address]);
+  let user: User | null = _.find(store.users, ['address', address]) || null;
 
   useEffect(() => {
+    (async () => {
+      if (!user) {
+        user = await db.getFirstAsync<User>('SELECT * FROM users WHERE address = ?', address);
+      }
+    })();
     store.loadChat(db, chat_id);
   }, [address]);
 
-  const user: User | null = _.find(store.users, ['address', address]) || null;
-
   const sectionedMessages = _.chain(store.messages)
-    .filter((m) => m.chatId === chat_id)
-    .orderBy((m) => new Date(m.timestamp).getTime(), 'desc')
+    .filter((message) => message.chatId === chat_id)
+    .map((message): Message => {
+      return {
+        ...message,
+        // content: decrypt(session?.privateKey, message.content),
+      };
+    })
+    .orderBy((message) => new Date(message.timestamp).getTime(), 'desc')
     .groupBy((message) => dayjs(message.timestamp).format('MMM DD, YYYY'))
     .map((messages, key) => ({ title: key, data: messages }))
     .value();
 
   const onsend = () => {
-    store.addMessage(db, session?.address as string, address as string, content);
-
+    store.addMessage(db, session, user || { address, publicKey }, content);
     setContent('');
   };
 
   const onsave = () => {
     store.addUser(db, { address: address as string, publicKey });
   };
+
   return (
     <View className="flex-1 items-center justify-center">
       <SectionList

@@ -1,12 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { randomUUID } from 'expo-crypto';
 import { Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { useEffect } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 
+import { createUser, generateKeyPair } from '../../encryption/key';
 import { useSession } from '../../providers/SessionProvider';
 import store from '../../store/store';
 
@@ -17,9 +16,10 @@ export default observer(() => {
   const users = _.filter(store.users, (user) => user.address !== session?.address);
 
   const onscan = () => {
+    const _user = createUser(generateKeyPair());
     store.addUser(db, {
-      address: randomUUID(),
-      publicKey: 'public key',
+      address: _user.address,
+      publicKey: _user.publicKey,
     });
   };
   return (
