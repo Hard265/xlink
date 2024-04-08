@@ -7,7 +7,6 @@ describe('encryption', () => {
     const message = 'Text to encrypt';
     const key = new PrivateKey();
     const encrypted = encrypt(key.publicKey.toHex(), message);
-
     const decrypted = decrypt(key.secret.toString('hex'), encrypted);
     expect(decrypted).toBe(message);
   });

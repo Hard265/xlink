@@ -1,25 +1,21 @@
 import { Buffer } from 'buffer';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
-import { entropyToMnemonic, mnemonicToEntropy, validateMnemonic } from '../encryption/bip39';
+import { mnemonicToEntropy, validateMnemonic } from '../encryption/bip39';
 import { createUser, generateKeyPair } from '../encryption/key';
 import { useSession } from '../providers/SessionProvider';
 
 export default function SignIn() {
   const [mnemonicInput, setMnemonicInput] = useState('');
   const { signIn } = useSession();
-  const [invalidMnemonic, setInvaliMnemonic] = useState(false)
+  const [invalidMnemonic, setInvaliMnemonic] = useState(false);
+  const onchangetext = (text: string) => {
+    setMnemonicInput(text);
+  };
 
-  useEffect(() => {}, []);
-  setInvaliMnemonic(false)
-  const onchangetext = (text) => {
-    
-    setMnemonicInput(text)
-  }
-
-  const onsignin = async () => {
+  const onsignin = () => {
     if (validateMnemonic(mnemonicInput.trim())) {
       const user = createUser(
         generateKeyPair(Buffer.from(mnemonicToEntropy(mnemonicInput), 'hex')),
@@ -28,7 +24,7 @@ export default function SignIn() {
       signIn(user);
       router.replace('/(app)/');
     }
-    setInvaliMnemonic(true)
+    setInvaliMnemonic(true);
   };
   const oncreate = () => {
     router.push('/sign-up');
@@ -45,13 +41,14 @@ export default function SignIn() {
           numberOfLines={3}
           textAlignVertical="top"
           value={mnemonicInput}
-          onChangeText={setMnemonicInput}
+          onChangeText={onchangetext}
           className="block w-full rounded-md py-2 px-3 border border-slate-300 focus:border-2 focus:border-slate-600"
         />
-        { invalidMnemonic ?
-          (<Text className='text-start text-xs text-red-600'>please provide a valid seed</Text>):
-          (<Text className="text-right text-xs leading-5 text-gray-500">{counter}/24</Text>)
-        }
+        {invalidMnemonic ? (
+          <Text className="text-start text-xs text-red-600">please provide a valid seed</Text>
+        ) : (
+          <Text className="text-right text-xs leading-5 text-gray-500">{counter}/24</Text>
+        )}
         <Pressable
           onPress={onsignin}
           disabled={counter < 24}
@@ -61,7 +58,7 @@ export default function SignIn() {
       </View>
       <Pressable
         onPress={oncreate}
-        className="flex w-full justify-center rounded-md bg-slate-300 px-3 py-2.5 mt-4">
+        className="flex w-full justify-center rounded bg-slate-200 px-3 py-2.5 mt-4">
         <Text className="text-sm font-semibold leading-6 text-slate-950 text-center">
           create new address
         </Text>

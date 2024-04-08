@@ -7,9 +7,7 @@ export async function databaseInit(db: SQLiteDatabase) {
 
     CREATE TABLE IF NOT EXISTS users (
         address TEXT PRIMARY KEY,
-        displayName TEXT,
-        publicKey TEXT NOT NULL,
-        created TEXT DEFAULT CURRENT_TIMESTAMP
+        publicKey TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS messages (

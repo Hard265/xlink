@@ -1,12 +1,13 @@
 import 'react-native-get-random-values';
+import '../polyfills/text-encoding';
+import 'fast-text-encoding';
 import { Buffer } from 'buffer';
 import { PrivateKey, PublicKey } from 'eciesjs';
-import { ec as ECType } from 'elliptic';
 //@ts-ignore
 import { ec as EC } from 'elliptic-expo';
 import CryptoJS from 'react-native-crypto-js';
 
-const ec: ECType = new EC('secp256k1');
+const ec = new EC('secp256k1');
 
 export function sign(hexSK: string, dataHex: string): string {
   const key = ec.keyFromPrivate(hexSK, 'hex');
@@ -34,8 +35,11 @@ export function encrypt(receiverRawPK: string, plainText: string) {
 
 export function decrypt(receiverRawSK: string, cipherText: string) {
   const cipherBuffer = Buffer.from(cipherText, 'base64');
-  const pk = cipherBuffer.subarray(0, 33).toString('hex');
-  const encrypted = cipherBuffer.subarray(33, cipherBuffer.length).toString('base64');
+  const pk = Buffer.from(Uint8Array.from(cipherBuffer).subarray(0, 33)).toString('hex');
+
+  const encrypted = cipherBuffer
+    .subarray(33, Uint8Array.from(cipherBuffer).length)
+    .toString('base64');
 
   const receiverSK = PrivateKey.fromHex(receiverRawSK);
   const senderPK = new PublicKey(Buffer.from(pk, 'hex'));

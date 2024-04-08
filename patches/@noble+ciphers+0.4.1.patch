@@ -1,0 +1,23 @@
+diff --git a/node_modules/@noble/ciphers/src/utils.ts b/node_modules/@noble/ciphers/src/utils.ts
+index 8f1e877..292511c 100644
+--- a/node_modules/@noble/ciphers/src/utils.ts
++++ b/node_modules/@noble/ciphers/src/utils.ts
+@@ -1,6 +1,7 @@
+ /*! noble-ciphers - MIT License (c) 2023 Paul Miller (paulmillr.com) */
+ 
+ // prettier-ignore
++import { TextEncoder, TextDecoder } from "text-encoding";
+ export type TypedArray = Int8Array | Uint8ClampedArray | Uint8Array |
+   Uint16Array | Int16Array | Uint32Array | Int32Array;
+ 
+@@ -109,8 +110,8 @@ export async function asyncLoop(iters: number, tick: number, cb: (i: number) =>
+ 
+ // Global symbols in both browsers and Node.js since v11
+ // See https://github.com/microsoft/TypeScript/issues/31535
+-declare const TextEncoder: any;
+-declare const TextDecoder: any;
++// declare const TextEncoder: any;
++// declare const TextDecoder: any;
+ 
+ /**
+  * @example utf8ToBytes('abc') // new Uint8Array([97, 98, 99])

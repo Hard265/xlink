@@ -1,12 +1,13 @@
+import { useSQLiteContext } from 'expo-sqlite/next';
 import React from 'react';
 
 import { useStorageState } from './useStorageState';
-import { BaseUser } from '../store/store';
+import { Admin } from '../store/store';
 
 const AuthContext = React.createContext<{
-  signIn: (user: BaseUser) => void;
+  signIn: (user: Admin) => void;
   signOut: () => void;
-  session?: BaseUser | null;
+  session?: Admin | null;
   isLoading: boolean;
 }>({
   signIn: () => null,
@@ -29,19 +30,27 @@ export function useSession() {
 
 export function SessionProvider(props: React.PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
+  const db = useSQLiteContext();
 
-  const onsignin = (user: BaseUser) => {
-    setSession(user.toJson());
+  const onsignin = (user: Admin) => {
+    db.runSync('INSERT OR IGNORE INTO users (address, publicKey) VALUES (?, ?)', [
+      user.address,
+      user.publicKey,
+    ]);
+    setSession(JSON.stringify(user));
+  };
+
+  const onsignout = () => {
+    db.runSync('DELETE FROM users; DELETE FROM messages; VACUUM;');
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         signIn: onsignin,
-        signOut: () => {
-          setSession(null);
-        },
-        session: session ? BaseUser.fromJson(JSON.parse(session)) : null,
+        signOut: onsignout,
+        session: session ? JSON.parse(session) : null,
         isLoading,
       }}>
       {props.children}

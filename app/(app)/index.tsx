@@ -1,14 +1,23 @@
 import { Feather } from '@expo/vector-icons';
-import { Stack, router } from 'expo-router';
+import { Link, Stack, router } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { View, Text, FlatList, Pressable, Button } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, FlatList, Pressable } from 'react-native';
 
 import { useSession } from '../../providers/SessionProvider';
 import store from '../../store/store';
 
 export default observer(() => {
-  const { session, signOut } = useSession();
+  const { session } = useSession();
+  const db = useSQLiteContext();
+
+  useEffect(() => {
+    (async () => {})();
+    store.loadRecents(db);
+  }, [session]);
+
   const data = _.chain(store.messages)
     .clone()
     .orderBy(
@@ -22,28 +31,36 @@ export default observer(() => {
     })
     .value();
 
-  const onfab = () => {
-    router.push('/(app)/users');
-  };
-
-  const onuser = () => router.push('/(app)/user');
+  const onuser = () => router.push('/(app)/profile');
 
   return (
     <View className="items-center justify-center flex-1">
       <FlatList
         data={data}
+        contentContainerStyle={{ alignItems: 'center', height: '100%' }}
+        className="w-full bg-white"
+        ListEmptyComponent={<ListEmptyComponent />}
+        ListHeaderComponent={<Text className="font-medium" />}
         renderItem={({ item }) => {
-          const title = item.sender === session?.address ? item.receiver : item.sender;
-          const onpress = () => {};
+          const address = item.sender === session?.address ? item.receiver : item.sender;
+          const user = _.find(store.users, address);
+          const onpress = () => {
+            router.push(`/(app)/${address}/chat?displayName=${user?.address}`);
+          };
 
           return (
-            <Pressable className="flex flex-row gap-x-2 px-2 py-0.5" onPress={onpress}>
-              <View className="flex-1 flex flex-col">
+            <Pressable
+              className="w-full flex flex-row gap-x-2 px-2 py-0.5 items-start"
+              onPress={onpress}>
+              <View className="rounded-full bg-slate-200 p-6" />
+              <View className="flex-1 flex flex-col self-center">
                 <View className="flex flex-row justify-between items-center">
-                  <Text>{title}</Text>
+                  <Text>{address}</Text>
                 </View>
                 <View>
-                  <Text>{item.content}</Text>
+                  <Text numberOfLines={1} ellipsizeMode="tail">
+                    {item.content}
+                  </Text>
                 </View>
               </View>
             </Pressable>
@@ -51,13 +68,16 @@ export default observer(() => {
         }}
         keyExtractor={(item) => item.id}
       />
-      <Pressable onPress={onfab} className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-xl">
+      <Link className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-2xl" href="/(app)/users">
         <Text className="text-gray-50">
-          <Feather name="users" size={20} />
+          <Feather name="edit-3" size={24} />
         </Text>
-      </Pressable>
+      </Link>
       <Stack.Screen
         options={{
+          title: 'XLINK',
+          headerTitleStyle: { fontWeight: '900' },
+          //@ts-ignore
           headerRight(props) {
             return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
           },
@@ -66,3 +86,11 @@ export default observer(() => {
     </View>
   );
 });
+
+const ListEmptyComponent = () => {
+  return (
+    <View className="my-auto">
+      <Text>No recent chats</Text>
+    </View>
+  );
+};

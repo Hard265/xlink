@@ -15,13 +15,7 @@ export default function AppLayout() {
 
   return (
     <Stack>
-      <Stack.Screen
-                name="scan"
-                options={{
-                  // Set the presentation mode to modal for our modal route.
-                  presentation: 'modal',
-                }}
-              />
-            </Stack>
+      <Stack.Screen name="[address]" options={{ headerShown: false }} />
+    </Stack>
   );
 }

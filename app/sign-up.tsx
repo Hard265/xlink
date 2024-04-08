@@ -38,7 +38,7 @@ export default function Page() {
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <ActivityIndicator color="#000" size="large" />
+        <ActivityIndicator className="h-32 w-32" color="#000" size="large" />
       </View>
     );
   }
@@ -67,7 +67,9 @@ export default function Page() {
       <Pressable
         onPress={onsignin}
         className="flex w-full justify-center rounded bg-slate-950 px-3 py-2.5 shadow-sm">
-        <Text className="text-sm text-center font-semibold leading-6 text-white">continue</Text>
+        <Text className="text-sm text-center font-semibold leading-6 text-white capitalize">
+          continue
+        </Text>
       </Pressable>
     </View>
   );

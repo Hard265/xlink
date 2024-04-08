@@ -3,17 +3,22 @@ import '../polyfills/text-encoding';
 import { Slot } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite/next';
 import { Suspense } from 'react';
-import { View } from 'react-native';
-
+import { ActivityIndicator, View } from 'react-native';
 import { SessionProvider } from '../providers/SessionProvider';
 import { databaseInit } from '../store/databaseInit';
+import { db_name } from '../utilities/constants';
 
 export default function Root() {
   const socketUrl = '';
 
   return (
-    <Suspense fallback={<Fallback />}>
-      <SQLiteProvider databaseName="test2.db" onInit={databaseInit} useSuspense>
+    <Suspense
+      fallback={
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      }>
+      <SQLiteProvider databaseName={db_name} onInit={databaseInit} useSuspense>
         <SessionProvider>
           {/* <SocketProvider url={socketUrl}> */}
             <Slot />
@@ -23,7 +28,6 @@ export default function Root() {
     </Suspense>
   );
 }
-
-function Fallback() {
+  function Fallback() {
   return <View>Loading.....</View>;
 }
