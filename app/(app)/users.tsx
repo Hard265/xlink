@@ -1,35 +1,34 @@
 import { Feather } from '@expo/vector-icons';
+import { BarCodeScanningResult } from 'expo-camera/build/Camera.types';
+import { CameraView } from 'expo-camera/next';
 import { Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { FlatList, Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { createUser, generateKeyPair } from '../../encryption/key';
 import { useSession } from '../../providers/SessionProvider';
 import store from '../../store/store';
 
 export default observer(() => {
   const db = useSQLiteContext();
   const { session } = useSession();
-
+  const [scanning, setScanning] = useState(false);
+  const onqrscan = (scanningResult: BarCodeScanningResult) => {
+    const address = scanningResult.data;
+    router.replace(`/(app)/${address}/chat`);
+  };
   const users = _.filter(store.users, (user) => user.address !== session?.address);
 
-  const onscan = () => {
-    const _user = createUser(generateKeyPair());
-    store.addUser(db, {
-      address: _user.address,
-      publicKey: _user.publicKey,
-    });
-  };
   return (
     <View className="flex-1 p-2">
       <FlatList
         ListHeaderComponent={
           <Pressable
-            onPress={onscan}
-            className="flex w-full justify-center rounded-md bg-slate-300 px-3 py-2.5">
-            <Text className="text-sm font-semibold leading-6 text-slate-950 text-center">
+            onPress={() => setScanning(true)}
+            className="flex w-full justify-center rounded-md bg-slate-300 p-2">
+            <Text className="text-sm font-medium leading-6 text-slate-950 text-center">
               scan address
             </Text>
           </Pressable>
@@ -48,6 +47,13 @@ export default observer(() => {
           </Pressable>
         )}
       />
+      <Modal visible={scanning} statusBarTranslucent onRequestClose={() => setScanning(false)}>
+        <CameraView
+          style={[StyleSheet.absoluteFill]}
+          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+          onBarcodeScanned={onqrscan}
+        />
+      </Modal>
       <Stack.Screen
         options={{
           headerTitleAlign: 'center',

@@ -6,7 +6,6 @@ import { SQLiteDatabase, openDatabaseAsync } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { action, makeObservable, observable } from 'mobx';
 
-import { encrypt } from '../encryption/cryptography';
 import { sortedArrayString } from '../utilities';
 import { db_name } from '../utilities/constants';
 
@@ -45,12 +44,11 @@ class Store {
   }
 
   async addMessage(db: SQLiteDatabase, session: Admin, receiver: User, content: string) {
-    const message = {
+    const m: Message = {
       id: randomUUID(),
       chatId: sortedArrayString([session.address, receiver.address]),
       sender: session.address,
-      content: encrypt(session.publicKey, content),
-      // content,
+      content,
       receiver: receiver.address,
       timestamp: dayjs().toISOString(),
     };
@@ -58,18 +56,10 @@ class Store {
     try {
       await db.runAsync(
         'INSERT INTO messages (id, chatId, sender, content, receiver, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
-        [
-          message.id,
-          message.chatId,
-          message.sender,
-          // content,
-          encrypt(session.publicKey, content),
-          message.receiver,
-          message.timestamp,
-        ],
+        [m.id, m.chatId, m.sender, m.content, m.receiver, m.timestamp],
       );
       this.proxy(() => {
-        this.messages = _.unionBy(this.messages, [message], 'id');
+        this.messages = _.unionBy(this.messages, [m], 'id');
       });
     } catch (error) {
       console.error(error);

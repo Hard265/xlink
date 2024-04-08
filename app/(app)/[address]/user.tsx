@@ -3,7 +3,8 @@ import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { useState } from 'react';
-import { Pressable, View, Text, Modal } from 'react-native';
+import { Pressable, View, Text, Modal, ScrollView } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 import store from '../../../store/store';
 
@@ -13,7 +14,7 @@ export default observer(() => {
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const user = _.find(store.users, { address });
+  // const user = _.find(store.users, { address });
 
   const ondelete = () => {
     store.deleteUser(db, address).then(() => {
@@ -22,30 +23,40 @@ export default observer(() => {
   };
 
   return (
-    <View className="flex flex-col items-center justify-center h-full w-full p-2">
-      {/**user delete button + prompt */}
-      <Pressable
-        className="flex items-center bg-red-600 border border-red-700 p-2 w-full rounded-xl mt-auto"
-        onPress={() => setModalVisible(true)}>
-        <Text className="text-red-200 font-medium">Delete {address}</Text>
-      </Pressable>
+    <View className="flex flex-col items-center h-full w-full">
+      <View className="bg-white w-full p-2 flex flex-row shadow">
+        <QRCode value={address} size={128} />
+        <Text className="text-base px-2 flex-1">{address}</Text>
+      </View>
+      <View className="w-full p-2 mt-auto">
+        <Pressable
+          className="flex items-center bg-red-600 border border-red-700 p-2 w-full rounded-lg"
+          onPress={() => setModalVisible(true)}>
+          <Text className="text-red-200 font-medium">Delete {address}</Text>
+        </Pressable>
+      </View>
       <Modal
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
-        supportedOrientations={['portrait', 'portrait-upside-down']}
+        statusBarTranslucent
+        transparent
         animationType="fade">
+        <Pressable
+          onPress={() => setModalVisible(false)}
+          className="bg-black/75 h-full w-full top-0 bottom-0 right-0 left-0 absolute"
+        />
         <View className="mx-4 my-auto">
-          <View className="border border-slate-300 bg-slate-200 p-4 rounded-lg">
-            <Text className="text-slate-600">Are you sure you want to delete {address}?</Text>
-            <View className="flex flex-row gap-x-2">
-              <Pressable className="flex-1" onPress={() => setModalVisible(false)}>
-                <Text className="text-slate-600">Cancel</Text>
-              </Pressable>
-              <Pressable
-                className="bg-red-600 border border-red-700 p-2 rounded-xl flex-1 mt-4"
-                onPress={ondelete}>
-                <Text className="text-red-200 font-medium">Delete</Text>
-              </Pressable>
+          <View className="bg-white p-4 rounded-lg">
+            <Text className="">
+              Are you sure you want to delete <Text className="font-medium">{address}</Text>?
+            </Text>
+            <View className="flex flex-row justify-end gap-x-6 p-3 pb-0">
+              <Text className="uppercase font-medium" onPress={() => setModalVisible(false)}>
+                Cancel
+              </Text>
+              <Text className="text-red-600 font-medium uppercase" onPress={ondelete}>
+                Delete
+              </Text>
             </View>
           </View>
         </View>
@@ -54,6 +65,7 @@ export default observer(() => {
       <Stack.Screen
         options={{
           title: address,
+          headerShadowVisible: false,
         }}
       />
     </View>

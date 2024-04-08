@@ -1,6 +1,5 @@
 import 'react-native-get-random-values';
 import '../polyfills/text-encoding';
-import 'fast-text-encoding';
 import { Slot } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite/next';
 import { Suspense } from 'react';

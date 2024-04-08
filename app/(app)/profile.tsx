@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
 import { observer } from 'mobx-react';
 import React from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
@@ -9,8 +10,11 @@ import { copyToClipboard } from '../../utilities';
 
 export default observer(() => {
   const { session, signOut } = useSession();
-
   const [deletePrompt, setDeletePrompt] = React.useState(false);
+
+  if (!session) {
+    return null;
+  }
 
   const onsignout = () => {
     signOut();
@@ -20,30 +24,23 @@ export default observer(() => {
     copyToClipboard(session?.address as string);
   };
 
-  const qrvalue = JSON.stringify({ address: session?.address, publicKey: session?.publicKey });
-
   const ondelete = () => {
     signOut();
   };
-  return (
-    <View className="p-4 flex-1">
-      <View className="flex flex-row items-end">
-        <QRCode value={qrvalue} />
-        <View className="ml-2">
-          <Text className="font-semibold">{session?.displayName}</Text>
-          <Text className="font-semibold">{session?.address}</Text>
-          <Feather name="copy" size={20} onPress={copyaddress} />
-        </View>
-      </View>
 
-      {/**delete account button and prompt */}
-      <Pressable
-        onPress={onsignout}
-        className="flex w-full justify-center rounded-md px-3 py-2.5 mt-auto bg-red-600 border border-red-700">
-        <Text className="text-sm font-semibold leading-6 text-red-200 text-center">
-          remove address from device
-        </Text>
-      </Pressable>
+  return (
+    <View className="flex-1">
+      <View className="bg-white w-full p-2 flex flex-row shadow">
+        <QRCode value={session.address} size={128} />
+        <Text className="text-base px-2 flex-1">{session.address}</Text>
+      </View>
+      <View className="w-full p-2 mt-auto">
+        <Pressable
+          className="flex items-center bg-red-600 border border-red-700 p-2 w-full rounded-lg"
+          onPress={onsignout}>
+          <Text className="text-red-200 font-medium">Remove address from device</Text>
+        </Pressable>
+      </View>
       <Modal
         visible={deletePrompt}
         transparent
@@ -68,6 +65,7 @@ export default observer(() => {
           </View>
         </View>
       </Modal>
+      <Stack.Screen options={{ title: 'Me', headerShadowVisible: false }} />
     </View>
   );
 });

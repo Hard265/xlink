@@ -68,14 +68,15 @@ export default observer(() => {
         }}
         keyExtractor={(item) => item.id}
       />
-      <Link className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-xl" href="/(app)/users">
+      <Link className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-2xl" href="/(app)/users">
         <Text className="text-gray-50">
-          <Feather name="plus" size={24} />
+          <Feather name="edit-3" size={24} />
         </Text>
       </Link>
       <Stack.Screen
         options={{
-          title: 'xlink',
+          title: 'XLINK',
+          headerTitleStyle: { fontWeight: '900' },
           //@ts-ignore
           headerRight(props) {
             return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;

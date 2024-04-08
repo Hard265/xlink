@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import { RIPEMD160, enc } from 'crypto-js';
 import { PrivateKey } from 'eciesjs';
 
