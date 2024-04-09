@@ -33,7 +33,7 @@ export default function SignIn() {
   const counter = mnemonicInput.trim().split(' ').length;
 
   return (
-    <View className="p-4 flex-1 justify-center items-center">
+    <View className="p-4 flex-1 justify-center items-center dark:bg-black">
       <View className="flex flex-col w-full my-auto">
         <TextInput
           multiline
@@ -52,14 +52,16 @@ export default function SignIn() {
         <Pressable
           onPress={onsignin}
           disabled={counter < 24}
-          className="flex w-full justify-center rounded-md bg-slate-950 px-3 py-2.5 mt-4">
-          <Text className="text-sm font-semibold leading-6 text-white text-center">import</Text>
+          className="flex w-full justify-center rounded-md bg-black dark:bg-white px-3 py-2.5 mt-4">
+          <Text className="text-sm font-semibold leading-6 text-white dark:text-black text-center">
+            import
+          </Text>
         </Pressable>
       </View>
       <Pressable
         onPress={oncreate}
-        className="flex w-full justify-center rounded bg-slate-200 px-3 py-2.5 mt-4">
-        <Text className="text-sm font-semibold leading-6 text-slate-950 text-center">
+        className="flex w-full justify-center rounded bg-gray-200 dark:bg-gray-800 px-3 py-2.5 mt-4">
+        <Text className="text-sm font-semibold leading-6 text-black dark:text-white text-center">
           create new address
         </Text>
       </Pressable>

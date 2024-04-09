@@ -160,8 +160,11 @@ const ItemRenderer = ({
   const timestamp = (
     <Text
       style={[styles.fontFace.InterMedium]}
-      className="text-xs text-gray-500 dark:text-gray-200 pr-3">
-      {dayjs(item.timestamp).format('h:mm A')}
+      className="text-xs text-gray-500 dark:text-gray-200 pr-3 justify-center">
+      {dayjs(item.timestamp).format('h:mm A')}{' '}
+      {item.state === 'PENDING' && <Feather name="clock" size={14} />}
+      {item.state === 'SENT' && <Feather name="check" size={14} />}
+      {item.state === 'FAILED' && <Feather name="x-circle" size={14} />}
     </Text>
   );
 

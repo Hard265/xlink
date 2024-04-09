@@ -44,7 +44,7 @@ export default function Page() {
   }
 
   return (
-    <View className="p-4 flex-1 justify-center items-center">
+    <View className="p-4 flex-1 justify-center items-center dark:bg-black">
       <View className="my-auto">
         <View className="flex flex-row flex-wrap gap-2 items-center justify-center">
           {mnemonicSeed.split(' ').map((mnemonic, index) => {
@@ -53,7 +53,7 @@ export default function Page() {
                 className="p-1.5 border border-gray-300 rounded-lg flex-row items-center gap-x-1.5"
                 key={index}>
                 <Text className="text-gray-400">{index + 1}</Text>
-                <Text className="font-semibold">{mnemonic}</Text>
+                <Text className="font-semibold dark:text-white">{mnemonic}</Text>
               </View>
             );
           })}
@@ -66,8 +66,8 @@ export default function Page() {
       </View>
       <Pressable
         onPress={onsignin}
-        className="flex w-full justify-center rounded bg-slate-950 px-3 py-2.5 shadow-sm">
-        <Text className="text-sm text-center font-semibold leading-6 text-white capitalize">
+        className="flex w-full justify-center rounded bg-black dark:bg-white px-3 py-2.5 shadow-sm">
+        <Text className="text-sm text-center font-semibold leading-6 text-white dark:text-black capitalize">
           continue
         </Text>
       </Pressable>

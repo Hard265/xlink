@@ -22,20 +22,20 @@ export function SocketProvider(props: React.PropsWithChildren<{ url: string }>) 
   const db = useSQLiteContext();
 
   React.useEffect(() => {
-    setSocket(io(props.url, { transports: ['polling'] }));
-
-    socket?.on('connected', () => {
-      setConnected(true);
-    });
-
-    socket?.on('message', (data) => {
-      store.receive(db, JSON.parse(data) as Message);
-    });
-
-    socket?.on('disconnected', () => {
-      setSocket(null);
-      setConnected(false);
-    });
+    setSocket(
+      io(props.url, { transports: ['polling'] })
+        .on('connected', () => {
+          setConnected(true);
+        })
+        .on('message', (data) => {
+          console.log(data);
+          store.receive(db, JSON.parse(data) as Message);
+        })
+        .on('disconnected', () => {
+          setSocket(null);
+          setConnected(false);
+        }),
+    );
 
     return () => {
       socket?.off('connected');

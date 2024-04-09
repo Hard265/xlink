@@ -67,7 +67,7 @@ class Store {
       });
       //3rd send it to the server
       socket
-        .emitWithAck('message', message)
+        .emitWithAck('message', JSON.stringify(message))
         .then(() => {
           //4th update the message state to sent
           this.proxy(() => {
@@ -183,7 +183,7 @@ export default new Store();
 
 async function insert_message(db: SQLiteDatabase, message: Message) {
   await db.runAsync(
-    'INSERT INTO messages (id, chatId, sender, content, receiver, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT OR IGNORE INTO messages (id, chatId, sender, content, receiver, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
     [
       message.id,
       message.chatId,

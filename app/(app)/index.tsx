@@ -7,19 +7,20 @@ import { observer } from 'mobx-react';
 import { useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 
-import ConnectionBanner from '../../components/ConnectionBanner';
 import styles from '../../misc/styles';
 import { useSession } from '../../providers/SessionProvider';
+import { useSocket } from '../../providers/SocketProvider';
 import store from '../../store/store';
 
 export default observer(() => {
   const { session } = useSession();
   const db = useSQLiteContext();
+  const { connected } = useSocket();
 
   useEffect(() => {
     (async () => {})();
     store.loadRecents(db);
-  }, [session]);
+  }, [session, connected]);
 
   const data = _.chain(store.messages)
     .clone()
@@ -38,7 +39,9 @@ export default observer(() => {
 
   return (
     <View className="items-center justify-center flex-1 dark:bg-black">
-      <ConnectionBanner />
+      <View className="bg-white">
+        <Text className="dark:text-white">is connected: {connected ? 'true' : 'false'}</Text>
+      </View>
       <FlatList
         data={data}
         contentContainerStyle={{ alignItems: 'center', height: '100%' }}
@@ -72,7 +75,10 @@ export default observer(() => {
                   className="dark:text-gray-300 flex-2">
                   {item.content} &bull;{' '}
                   <Text style={[styles.fontFace.InterMedium]} className="text-xs">
-                    {dayjs(item.timestamp).format('h:mm A')}
+                    {dayjs(item.timestamp).format('h:mm A')}&nbsp;
+                    {item.state === 'PENDING' && <Feather name="clock" size={14} />}
+                    {item.state === 'SENT' && <Feather name="check" size={14} />}
+                    {item.state === 'FAILED' && <Feather name="x-circle" size={14} />}
                   </Text>
                 </Text>
               </View>
