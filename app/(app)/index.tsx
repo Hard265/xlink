@@ -1,11 +1,14 @@
 import { Feather } from '@expo/vector-icons';
+import dayjs from 'dayjs';
 import { Link, Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { useEffect } from 'react';
-import { View, Text, FlatList, Pressable } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 
+import ConnectionBanner from '../../components/ConnectionBanner';
+import styles from '../../misc/styles';
 import { useSession } from '../../providers/SessionProvider';
 import store from '../../store/store';
 
@@ -34,11 +37,12 @@ export default observer(() => {
   const onuser = () => router.push('/(app)/profile');
 
   return (
-    <View className="items-center justify-center flex-1">
+    <View className="items-center justify-center flex-1 dark:bg-black">
+      <ConnectionBanner />
       <FlatList
         data={data}
         contentContainerStyle={{ alignItems: 'center', height: '100%' }}
-        className="w-full bg-white"
+        className="w-full bg-white dark:bg-black"
         ListEmptyComponent={<ListEmptyComponent />}
         ListHeaderComponent={<Text className="font-medium" />}
         renderItem={({ item }) => {
@@ -49,34 +53,46 @@ export default observer(() => {
           };
 
           return (
-            <Pressable
+            <TouchableOpacity
               className="w-full flex flex-row gap-x-2 px-2 py-0.5 items-start"
               onPress={onpress}>
-              <View className="rounded-full bg-slate-200 p-6" />
+              <View className="rounded-full bg-gray-200 dark:bg-gray-600 h-12 w-12 items-center justify-center">
+                <Text className="text-xl uppercase">{address.substring(0, 1)}</Text>
+              </View>
               <View className="flex-1 flex flex-col self-center">
                 <View className="flex flex-row justify-between items-center">
-                  <Text>{address}</Text>
-                </View>
-                <View>
-                  <Text numberOfLines={1} ellipsizeMode="tail">
-                    {item.content}
+                  <Text style={[styles.fontFace.InterMedium]} className="dark:text-white ">
+                    {address}
                   </Text>
                 </View>
+                <Text
+                  style={[styles.fontFace.InterRegular]}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                  className="dark:text-gray-300 flex-2">
+                  {item.content} &bull;{' '}
+                  <Text style={[styles.fontFace.InterMedium]} className="text-xs">
+                    {dayjs(item.timestamp).format('h:mm A')}
+                  </Text>
+                </Text>
               </View>
-            </Pressable>
+            </TouchableOpacity>
           );
         }}
         keyExtractor={(item) => item.id}
       />
-      <Link className="absolute bottom-2 right-2 p-4 bg-slate-950 rounded-2xl" href="/(app)/users">
-        <Text className="text-gray-50">
-          <Feather name="edit-3" size={24} />
+      <Link
+        className="absolute bottom-2 right-2 p-5 bg-black dark:bg-white rounded-3xl"
+        href="/(app)/users">
+        <Text className="text-white dark:text-black">
+          <Feather name="edit-3" size={20} />
         </Text>
       </Link>
       <Stack.Screen
         options={{
-          title: 'XLINK',
-          headerTitleStyle: { fontWeight: '900' },
+          title: 'Xlink',
+
+          headerTitleStyle: styles.fontFace.PacificoRegular,
           //@ts-ignore
           headerRight(props) {
             return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
@@ -86,7 +102,6 @@ export default observer(() => {
     </View>
   );
 });
-
 const ListEmptyComponent = () => {
   return (
     <View className="my-auto">

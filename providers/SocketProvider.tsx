@@ -1,5 +1,8 @@
+import { useSQLiteContext } from 'expo-sqlite/next';
 import React from 'react';
 import { Socket, io } from 'socket.io-client';
+
+import store, { Message } from '../store/store';
 
 const SocketContext = React.createContext<{
   socket: Socket | null;
@@ -16,23 +19,28 @@ export function useSocket() {
 export function SocketProvider(props: React.PropsWithChildren<{ url: string }>) {
   const [connected, setConnected] = React.useState<boolean>(false);
   const [socket, setSocket] = React.useState<Socket | null>(null);
+  const db = useSQLiteContext();
 
   React.useEffect(() => {
-    const sock = io(props.url);
+    setSocket(io(props.url, { transports: ['polling'] }));
 
-    sock.on('connected', () => {
-      setSocket(sock);
+    socket?.on('connected', () => {
       setConnected(true);
     });
-    sock.on('disconnected', () => {
+
+    socket?.on('message', (data) => {
+      store.receive(db, JSON.parse(data) as Message);
+    });
+
+    socket?.on('disconnected', () => {
       setSocket(null);
       setConnected(false);
     });
 
     return () => {
-      sock.off('connected');
-      sock.off('disconnected');
-      sock.disconnect();
+      socket?.off('connected');
+      socket?.off('disconnected');
+      socket?.disconnect();
     };
   }, [props.url]);
 
