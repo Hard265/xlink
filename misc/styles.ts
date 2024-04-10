@@ -3,6 +3,9 @@ export default {
     InterMedium: {
       fontFamily: 'Inter_500Medium',
     },
+    InterSemiBold: {
+      fontFamily: 'Inter_600SemiBold',
+    },
     InterRegular: {
       fontFamily: 'Inter_400Regular',
     },

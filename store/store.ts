@@ -67,7 +67,7 @@ class Store {
       });
       //3rd send it to the server
       socket
-        .emitWithAck('message', JSON.stringify(message))
+        .emitWithAck('message', message)
         .then(() => {
           //4th update the message state to sent
           this.proxy(() => {

@@ -1,8 +1,10 @@
+import { Feather } from '@expo/vector-icons';
 import { PrivateKey } from 'eciesjs';
 import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
+import Text from '../components/Text';
 import { entropyToMnemonic } from '../encryption/bip39';
 import { generateKeyPair, createUser } from '../encryption/key';
 import { useSession } from '../providers/SessionProvider';
@@ -14,6 +16,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [key, setKey] = useState<PrivateKey | null>(null);
   const [mnemonicSeed, setMnemonicSeed] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -32,7 +35,12 @@ export default function Page() {
   };
 
   const oncopy = () => {
-    copyToClipboard(mnemonicSeed.trim());
+    copyToClipboard(mnemonicSeed.trim()).then(() => {
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 5000);
+    });
   };
 
   if (loading) {
@@ -50,27 +58,41 @@ export default function Page() {
           {mnemonicSeed.split(' ').map((mnemonic, index) => {
             return (
               <View
-                className="p-1.5 border border-gray-300 rounded-lg flex-row items-center gap-x-1.5"
+                className="p-1.5 bg-gray-200 rounded-lg flex-row items-center gap-x-1.5 shadow-sm dark:bg-gray-800"
                 key={index}>
                 <Text className="text-gray-400">{index + 1}</Text>
-                <Text className="font-semibold dark:text-white">{mnemonic}</Text>
+                <Text className="dark:text-white">{mnemonic}</Text>
               </View>
             );
           })}
         </View>
-        <Text
-          onPress={oncopy}
-          className="text-center font-medium text-blue-600 dark:text-blue-500 hover:underline mt-4">
-          copy to clipboard
-        </Text>
+        <Copier copied={copied} oncopy={oncopy} />
       </View>
       <Pressable
         onPress={onsignin}
-        className="flex w-full justify-center rounded bg-black dark:bg-white px-3 py-2.5 shadow-sm">
-        <Text className="text-sm text-center font-semibold leading-6 text-white dark:text-black capitalize">
+        className="flex w-full justify-center rounded-xl bg-black dark:bg-white px-3 py-2.5 shadow-sm">
+        <Text className="text-sm text-center leading-6 text-white dark:text-black capitalize">
           continue
         </Text>
       </Pressable>
     </View>
+  );
+}
+
+interface CopierProps {
+  copied: boolean;
+  oncopy: () => void;
+}
+function Copier({ copied, oncopy }: CopierProps) {
+  return copied ? (
+    <Text className="text-center text-blue-600 dark:text-blue-500 mt-4 justify-center">
+      <Feather name="check" size={16} /> Copied!
+    </Text>
+  ) : (
+    <Text
+      onPress={oncopy}
+      className="text-center text-blue-600 dark:text-blue-500 mt-4 justify-center">
+      <Feather name="copy" size={16} /> Copy
+    </Text>
   );
 }

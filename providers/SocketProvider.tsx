@@ -1,5 +1,5 @@
 import { useSQLiteContext } from 'expo-sqlite/next';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Socket, io } from 'socket.io-client';
 
 import store, { Message } from '../store/store';
@@ -21,28 +21,28 @@ export function SocketProvider(props: React.PropsWithChildren<{ url: string }>) 
   const [socket, setSocket] = React.useState<Socket | null>(null);
   const db = useSQLiteContext();
 
-  React.useEffect(() => {
-    setSocket(
-      io(props.url, { transports: ['polling'] })
-        .on('connected', () => {
-          setConnected(true);
-        })
-        .on('message', (data) => {
-          console.log(data);
-          store.receive(db, JSON.parse(data) as Message);
-        })
-        .on('disconnected', () => {
-          setSocket(null);
-          setConnected(false);
-        }),
-    );
+  useEffect(function didMount() {
+    const socket = io(props.url, {
+      transports: ['websocket'],
+    });
+    setSocket(socket);
 
-    return () => {
-      socket?.off('connected');
-      socket?.off('disconnected');
-      socket?.disconnect();
+    socket.io.on('open', () => {
+      setConnected(true);
+      socket.emit;
+    });
+
+    socket.io.on('close', () => setConnected(false));
+
+    socket.on('message', (data) => {
+      store.receive(db, data as Message);
+    });
+
+    return function didUnmount() {
+      socket.disconnect();
+      socket.removeAllListeners();
     };
-  }, [props.url]);
+  }, []);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>{props.children}</SocketContext.Provider>

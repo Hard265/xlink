@@ -19,22 +19,26 @@ import {
 } from 'react-native';
 import { Socket } from 'socket.io-client';
 
+import State from '../../../components/State';
 import styles from '../../../misc/styles';
 import { useSession } from '../../../providers/SessionProvider';
 import { useSocket } from '../../../providers/SocketProvider';
 import store, { Message, User } from '../../../store/store';
 import { getRandomId, isoStringToCalender, sortedArrayString } from '../../../utilities';
 
+type SearchParams = {
+  address: string;
+  publicKey: string;
+};
+
 export default observer(() => {
-  const { address, publicKey } = useGlobalSearchParams<{
-    address: string;
-    publicKey: string;
-  }>();
+  const { address, publicKey } = useGlobalSearchParams<SearchParams>();
   const db = useSQLiteContext();
+  const scrollRef = createRef<SectionList>();
+  const inputRef = createRef<TextInput>();
   const { session } = useSession();
   const { socket } = useSocket();
   const [content, setContent] = useState('');
-  const scrollRef = createRef<SectionList>();
 
   dayjs.extend(calender);
 
@@ -62,7 +66,7 @@ export default observer(() => {
     .value();
 
   const handle_submit = () => {
-    const message: Message = {
+    store.send(db, socket as Socket, {
       id: getRandomId(),
       chatId: chat_id,
       sender: session.address,
@@ -70,10 +74,9 @@ export default observer(() => {
       content,
       timestamp: new Date().toISOString(),
       state: 'PENDING',
-    };
-    store.send(db, socket as Socket, message);
-
-    setContent('');
+    });
+    inputRef.current?.clear();
+    inputRef.current?.blur();
   };
 
   const handle_save = () => {
@@ -104,6 +107,7 @@ export default observer(() => {
       />
       <View className="flex flex-row gap-x-2 p-2">
         <TextInput
+          ref={inputRef}
           value={content}
           onChangeText={setContent}
           multiline
@@ -140,15 +144,12 @@ export default observer(() => {
   );
 });
 
-const ItemRenderer = ({
-  item,
-  index,
-  section,
-}: {
+interface ItemRendererProps {
   item: Message;
   index: number;
   section: SectionListData<Message, DefaultSectionT>;
-}) => {
+}
+const ItemRenderer = ({ item, index, section }: ItemRendererProps) => {
   const { session } = useSession();
   const [showOverline, setShowOverline] = useState(false);
 
@@ -160,11 +161,8 @@ const ItemRenderer = ({
   const timestamp = (
     <Text
       style={[styles.fontFace.InterMedium]}
-      className="text-xs text-gray-500 dark:text-gray-200 pr-3 justify-center">
-      {dayjs(item.timestamp).format('h:mm A')}{' '}
-      {item.state === 'PENDING' && <Feather name="clock" size={14} />}
-      {item.state === 'SENT' && <Feather name="check" size={14} />}
-      {item.state === 'FAILED' && <Feather name="x-circle" size={14} />}
+      className="text-xs text-gray-700 dark:text-gray-300 p-1 justify-center">
+      {dayjs(item.timestamp).format('h:mm A')} <State message={item} />
     </Text>
   );
 
@@ -177,26 +175,25 @@ const ItemRenderer = ({
             {item.content}
           </Text>
         </View>
-        {showOverline && timestamp}
+        {(showOverline || item.state === 'FAILED') && timestamp}
       </Pressable>
     );
   }
 
   borderRadiusClassName = computedBorderRadiusReciever(section, index);
   return (
-    <TouchableOpacity onPress={onpress} className="flex items-start justify-center">
-      <View className={`p-3 bg-slate-200 rounded-2xl mb-2 ${borderRadiusClassName}`}>
-        <Text>{item.content}</Text>
+    <Pressable onPress={onpress} className="flex items-start justify-center px-2 pb-0.5">
+      <View className={`max-w-[85%] p-3 bg-slate-200 rounded-3xl ${borderRadiusClassName}`}>
+        <Text style={[styles.fontFace.InterMedium]}>{item.content}</Text>
       </View>
       {showOverline && timestamp}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
 interface ListFooterComponentProps {
   onsave: () => void;
 }
-
 const ListFooterComponent = ({ onsave }: ListFooterComponentProps) => (
   <View className="flex-row justify-center items-start gap-x-4 p-4 m-2 rounded-xl bg-white dark:bg-gray-800 shadow">
     <Text className="text-black dark:text-white">
@@ -215,6 +212,7 @@ const ListFooterComponent = ({ onsave }: ListFooterComponentProps) => (
     </View>
   </View>
 );
+
 function computedBorderRadiusReciever(
   section: SectionListData<Message, DefaultSectionT>,
   index: number,

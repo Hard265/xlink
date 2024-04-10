@@ -2,11 +2,14 @@ import { Feather } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { Link, Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
+import { StatusBar } from 'expo-status-bar';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, FlatList, TouchableOpacity } from 'react-native';
 
+import State from '../../components/State';
+import Text from '../../components/Text';
 import styles from '../../misc/styles';
 import { useSession } from '../../providers/SessionProvider';
 import { useSocket } from '../../providers/SocketProvider';
@@ -38,16 +41,20 @@ export default observer(() => {
   const onuser = () => router.push('/(app)/profile');
 
   return (
-    <View className="items-center justify-center flex-1 dark:bg-black">
-      <View className="bg-white">
-        <Text className="dark:text-white">is connected: {connected ? 'true' : 'false'}</Text>
-      </View>
+    <View className="items-center justify-center flex-1 bg-white dark:bg-black">
+      {!connected ? (
+        <Text className="text-red-600 dark:text-red-500 capitalize p-1">
+          no internet connection
+        </Text>
+      ) : (
+        <Text className="text-green-600 dark:text-green-500 capitalize p-1">connected</Text>
+      )}
       <FlatList
         data={data}
         contentContainerStyle={{ alignItems: 'center', height: '100%' }}
         className="w-full bg-white dark:bg-black"
         ListEmptyComponent={<ListEmptyComponent />}
-        ListHeaderComponent={<Text className="font-medium" />}
+        ListHeaderComponent={<Text />}
         renderItem={({ item }) => {
           const address = item.sender === session?.address ? item.receiver : item.sender;
           const user = _.find(store.users, address);
@@ -64,21 +71,15 @@ export default observer(() => {
               </View>
               <View className="flex-1 flex flex-col self-center">
                 <View className="flex flex-row justify-between items-center">
-                  <Text style={[styles.fontFace.InterMedium]} className="dark:text-white ">
-                    {address}
-                  </Text>
+                  <Text className="dark:text-white ">{address}</Text>
                 </View>
                 <Text
-                  style={[styles.fontFace.InterRegular]}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                   className="dark:text-gray-300 flex-2">
                   {item.content} &bull;{' '}
-                  <Text style={[styles.fontFace.InterMedium]} className="text-xs">
-                    {dayjs(item.timestamp).format('h:mm A')}&nbsp;
-                    {item.state === 'PENDING' && <Feather name="clock" size={14} />}
-                    {item.state === 'SENT' && <Feather name="check" size={14} />}
-                    {item.state === 'FAILED' && <Feather name="x-circle" size={14} />}
+                  <Text className="text-xs">
+                    {dayjs(item.timestamp).format('h:mm A')} <State message={item} />
                   </Text>
                 </Text>
               </View>
@@ -96,12 +97,15 @@ export default observer(() => {
       </Link>
       <Stack.Screen
         options={{
-          title: 'Xlink',
-
+          title: 'Xlink.',
           headerTitleStyle: styles.fontFace.PacificoRegular,
-          //@ts-ignore
           headerRight(props) {
-            return <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />;
+            return (
+              <View className="flex flex-row gap-x-4">
+                <Feather name="search" size={24} color={props.tintColor} />
+                <Feather onPress={onuser} name="user" size={24} color={props.tintColor} />
+              </View>
+            );
           },
         }}
       />
