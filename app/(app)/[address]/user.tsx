@@ -1,11 +1,11 @@
 import { Stack, router, useGlobalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
-import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { useState } from 'react';
-import { Pressable, View, Text, Modal, ScrollView } from 'react-native';
+import { Pressable, View, Text, Modal } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
+import styles from '../../../misc/styles';
 import store from '../../../store/store';
 
 export default observer(() => {
@@ -23,10 +23,16 @@ export default observer(() => {
   };
 
   return (
-    <View className="flex flex-col items-center h-full w-full">
-      <View className="bg-white w-full p-2 flex flex-row shadow">
-        <QRCode value={address} size={128} />
-        <Text className="text-base px-2 flex-1">{address}</Text>
+    <View className="dark:bg-black flex flex-col items-center h-full w-full">
+      <View className="bg-white dark:bg-black w-full p-2 flex flex-row shadow">
+        <View className="p-4 bg-white">
+          <QRCode value={address} size={128} />
+        </View>
+        <Text
+          style={[styles.fontFace.InterMedium]}
+          className="dark:text-white text-base px-2 flex-1">
+          {address}
+        </Text>
       </View>
       <View className="w-full p-2 mt-auto">
         <Pressable

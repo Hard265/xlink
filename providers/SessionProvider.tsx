@@ -2,7 +2,7 @@ import { useSQLiteContext } from 'expo-sqlite/next';
 import React from 'react';
 
 import { useStorageState } from './useStorageState';
-import { Admin } from '../store/store';
+import store, { Admin } from '../store/store';
 
 const AuthContext = React.createContext<{
   signIn: (user: Admin) => void;
@@ -42,6 +42,7 @@ export function SessionProvider(props: React.PropsWithChildren) {
 
   const onsignout = () => {
     db.runSync('DELETE FROM users; DELETE FROM messages; VACUUM;');
+    store.reset();
     setSession(null);
   };
 

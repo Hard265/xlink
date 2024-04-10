@@ -17,6 +17,7 @@ export async function databaseInit(db: SQLiteDatabase) {
         receiver TEXT NOT NULL,
         content TEXT NOT NULL,
         timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+        state TEXT DEFAULT 'PENDING',
         FOREIGN KEY (sender) REFERENCES users(address) ON DELETE CASCADE ON UPDATE RESTRICT,
         FOREIGN KEY (receiver) REFERENCES users(address) ON DELETE CASCADE ON UPDATE RESTRICT
     );

@@ -1,5 +1,8 @@
-import React from 'react';
+import { useSQLiteContext } from 'expo-sqlite/next';
+import React, { useEffect } from 'react';
 import { Socket, io } from 'socket.io-client';
+
+import store, { Message } from '../store/store';
 
 const SocketContext = React.createContext<{
   socket: Socket | null;
@@ -16,25 +19,30 @@ export function useSocket() {
 export function SocketProvider(props: React.PropsWithChildren<{ url: string }>) {
   const [connected, setConnected] = React.useState<boolean>(false);
   const [socket, setSocket] = React.useState<Socket | null>(null);
+  const db = useSQLiteContext();
 
-  React.useEffect(() => {
-    const sock = io(props.url);
+  useEffect(function didMount() {
+    const socket = io(props.url, {
+      transports: ['websocket'],
+    });
+    setSocket(socket);
 
-    sock.on('connected', () => {
-      setSocket(sock);
+    socket.io.on('open', () => {
       setConnected(true);
-    });
-    sock.on('disconnected', () => {
-      setSocket(null);
-      setConnected(false);
+      socket.emit;
     });
 
-    return () => {
-      sock.off('connected');
-      sock.off('disconnected');
-      sock.disconnect();
+    socket.io.on('close', () => setConnected(false));
+
+    socket.on('message', (data) => {
+      store.receive(db, data as Message);
+    });
+
+    return function didUnmount() {
+      socket.disconnect();
+      socket.removeAllListeners();
     };
-  }, [props.url]);
+  }, []);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>{props.children}</SocketContext.Provider>

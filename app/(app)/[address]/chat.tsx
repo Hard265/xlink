@@ -1,33 +1,46 @@
 import { Feather } from '@expo/vector-icons';
 import dayjs from 'dayjs';
+import calender from 'dayjs/plugin/calendar';
 import { Stack, router, useGlobalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
+import { StatusBar } from 'expo-status-bar';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import React, { createRef, useEffect, useState } from 'react';
 import {
   View,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   Text,
   SectionList,
   DefaultSectionT,
   SectionListData,
+  Pressable,
 } from 'react-native';
+import { Socket } from 'socket.io-client';
 
+import State from '../../../components/State';
+import styles from '../../../misc/styles';
 import { useSession } from '../../../providers/SessionProvider';
+import { useSocket } from '../../../providers/SocketProvider';
 import store, { Message, User } from '../../../store/store';
-import { sortedArrayString } from '../../../utilities';
+import { getRandomId, isoStringToCalender, sortedArrayString } from '../../../utilities';
+
+type SearchParams = {
+  address: string;
+  publicKey: string;
+};
 
 export default observer(() => {
-  const { address, publicKey } = useGlobalSearchParams<{
-    address: string;
-    publicKey: string;
-  }>();
+  const { address, publicKey } = useGlobalSearchParams<SearchParams>();
   const db = useSQLiteContext();
-  const { session } = useSession();
-  const [content, setContent] = useState('');
   const scrollRef = createRef<SectionList>();
+  const inputRef = createRef<TextInput>();
+  const { session } = useSession();
+  const { socket } = useSocket();
+  const [content, setContent] = useState('');
+
+  dayjs.extend(calender);
 
   if (!session) {
     return null;
@@ -45,39 +58,48 @@ export default observer(() => {
     store.loadChat(db, chat_id);
   }, [address]);
 
-  const sectionedMessages = _.chain(store.messages)
+  const grouped = _.chain(store.messages)
     .filter((message) => message.chatId === chat_id)
     .orderBy((message) => new Date(message.timestamp).getTime(), 'desc')
     .groupBy((message) => dayjs(message.timestamp).format('dddd, MMM DD'))
     .map((messages, key) => ({ title: key, data: messages }))
     .value();
 
-  const onsend = () => {
-    store.addMessage(db, session, user || { address, publicKey }, content);
-    setContent('');
-    // scrollRef.current?.scrollToLocation({ animated: false, sectionIndex: 0, itemIndex: 0 });
+  const handle_submit = () => {
+    store.send(db, socket as Socket, {
+      id: getRandomId(),
+      chatId: chat_id,
+      sender: session.address,
+      receiver: address,
+      content,
+      timestamp: new Date().toISOString(),
+      state: 'PENDING',
+    });
+    inputRef.current?.clear();
+    inputRef.current?.blur();
   };
 
-  const onsave = () => {
+  const handle_save = () => {
     store.addUser(db, { address: address as string, publicKey });
   };
 
   return (
-    <View className="flex-1 items-center justify-center">
+    <View className="flex-1 items-center justify-center dark:bg-black">
       <SectionList
         ref={scrollRef}
         className="flex-1 w-full"
-        ListFooterComponent={!user ? <ListFooterComponent onsave={onsave} /> : null}
-        sections={sectionedMessages}
+        ListFooterComponent={!user ? <ListFooterComponent onsave={handle_save} /> : null}
+        sections={grouped}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index, section }) => (
           <ItemRenderer item={item} index={index} section={section} />
         )}
         renderSectionFooter={({ section }) => (
           <View className="flex-row justify-center items-center p-2.5">
-            <Text className="text-slate-600 text-xs font-medium">
-              {dayjs(_.last(section.data)?.timestamp).format('dddd, MMM DD')} &bull;{' '}
-              {dayjs(_.last(section.data)?.timestamp).format('h:mm A')}
+            <Text
+              style={[styles.fontFace.InterMedium]}
+              className="text-gray-600 dark:text-gray-200 text-xs">
+              {isoStringToCalender(_.last(section.data)?.timestamp)}
             </Text>
           </View>
         )}
@@ -85,20 +107,22 @@ export default observer(() => {
       />
       <View className="flex flex-row gap-x-2 p-2">
         <TextInput
+          ref={inputRef}
           value={content}
           onChangeText={setContent}
           multiline
           numberOfLines={1}
           placeholder="Type your message here..."
-          className="flex-1  border-gray-300 px-4 py-2 rounded-3xl bg-white shadow"
+          style={[styles.fontFace.InterMedium]}
+          className="flex-1 px-4 py-2 rounded-3xl text-black dark:text-white bg-white dark:bg-gray-800 shadow border border-transparent focus:border-gray-400 dark:focus:border-gray-700"
         />
-        <Pressable
-          onPress={onsend}
-          className="flex items-center justify-between self-end rounded-full bg-slate-800 p-3">
-          <Text className="text-slate-50">
+        <TouchableOpacity
+          onPress={handle_submit}
+          className="flex items-center justify-between self-end rounded-full bg-black dark:bg-white p-3">
+          <Text className="text-white dark:text-black">
             <Feather name="arrow-up" size={24} />
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
       <Stack.Screen
         options={{
@@ -120,43 +144,47 @@ export default observer(() => {
   );
 });
 
-const ItemRenderer = ({
-  item,
-  index,
-  section,
-}: {
+interface ItemRendererProps {
   item: Message;
   index: number;
   section: SectionListData<Message, DefaultSectionT>;
-}) => {
+}
+const ItemRenderer = ({ item, index, section }: ItemRendererProps) => {
   const { session } = useSession();
   const [showOverline, setShowOverline] = useState(false);
+
   const onpress = () => {
     setShowOverline(!showOverline);
   };
 
   let borderRadiusClassName = computedBorderRadiusSender(section, index);
   const timestamp = (
-    <Text className="text-xs text-slate-500 pr-3">{dayjs(item.timestamp).format('h:mm A')}</Text>
+    <Text
+      style={[styles.fontFace.InterMedium]}
+      className="text-xs text-gray-700 dark:text-gray-300 p-1 justify-center">
+      {dayjs(item.timestamp).format('h:mm A')} <State message={item} />
+    </Text>
   );
 
   if (item.sender === session?.address) {
     return (
       <Pressable onPress={onpress} className="flex items-end justify-center w-full px-2 pb-0.5">
         <View
-          className={`max-w-[85%] p-3 px-4 bg-white rounded-3xl shadow ${borderRadiusClassName}`}>
-          <Text className="text-base">{item.content}</Text>
+          className={`max-w-[85%] p-3 px-4 bg-white dark:bg-gray-800 rounded-3xl shadow ${borderRadiusClassName}`}>
+          <Text style={[styles.fontFace.InterMedium]} className="dark:text-white">
+            {item.content}
+          </Text>
         </View>
-        {showOverline && timestamp}
+        {(showOverline || item.state === 'FAILED') && timestamp}
       </Pressable>
     );
   }
 
   borderRadiusClassName = computedBorderRadiusReciever(section, index);
   return (
-    <Pressable onPress={onpress} className="flex items-start justify-center">
-      <View className={`p-3 bg-slate-200 rounded-2xl mb-2 ${borderRadiusClassName}`}>
-        <Text>{item.content}</Text>
+    <Pressable onPress={onpress} className="flex items-start justify-center px-2 pb-0.5">
+      <View className={`max-w-[85%] p-3 bg-slate-200 rounded-3xl ${borderRadiusClassName}`}>
+        <Text style={[styles.fontFace.InterMedium]}>{item.content}</Text>
       </View>
       {showOverline && timestamp}
     </Pressable>
@@ -166,22 +194,25 @@ const ItemRenderer = ({
 interface ListFooterComponentProps {
   onsave: () => void;
 }
-
 const ListFooterComponent = ({ onsave }: ListFooterComponentProps) => (
-  <View className="w-full flex-row justify-center items-center p-4 bg-slate-200">
-    <Text className="text-slate-950">
-      <Feather name="user-plus" size={24} />
+  <View className="flex-row justify-center items-start gap-x-4 p-4 m-2 rounded-xl bg-white dark:bg-gray-800 shadow">
+    <Text className="text-black dark:text-white">
+      <Feather name="user-plus" size={28} />
     </Text>
     <View className="flex-1">
-      <Text className="text-slate-950">This address is not in your contacts.</Text>
-      <View className="flex-row justify-between items-center p-2 gap-x-4">
-        <Pressable onPress={onsave} className="flex-1 p-2.5 bg-slate-950 rounded">
-          <Text className="text-slate-50 font-medium">Add to contacts</Text>
-        </Pressable>
+      <Text className="dark:text-white">This address is not in your contacts.</Text>
+      <View className="flex-row justify-end items-center p-2 pt-4 pb-0 gap-x-4">
+        <Text className="font-medium uppercase dark:text-white">Dismiss</Text>
+        <TouchableOpacity
+          onPress={onsave}
+          className="flex-1 items-center p-2 bg-gray-200 dark:bg-gray-950 rounded-xl">
+          <Text className="font-medium uppercase dark:text-white">save</Text>
+        </TouchableOpacity>
       </View>
     </View>
   </View>
 );
+
 function computedBorderRadiusReciever(
   section: SectionListData<Message, DefaultSectionT>,
   index: number,

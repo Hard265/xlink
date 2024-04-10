@@ -1,12 +1,10 @@
 import '../polyfills/text-encoding';
 import 'fast-text-encoding';
-import dayjs from 'dayjs';
-import { randomUUID } from 'expo-crypto';
 import { SQLiteDatabase, openDatabaseAsync } from 'expo-sqlite/next';
 import _ from 'lodash';
 import { action, makeObservable, observable } from 'mobx';
+import { Socket } from 'socket.io-client';
 
-import { sortedArrayString } from '../utilities';
 import { db_name } from '../utilities/constants';
 
 type BaseUser = {
@@ -19,6 +17,12 @@ type Admin = BaseUser & {
   privateKey: string;
 };
 
+enum messageState {
+  SENT = 'SENT',
+  PENDING = 'PENDING',
+  FAILED = 'FAILED',
+}
+
 type Message = {
   id: string;
   chatId: string;
@@ -26,9 +30,84 @@ type Message = {
   content: string;
   receiver: string;
   timestamp: string;
+  state: keyof typeof messageState;
 };
 
 class Store {
+  db: SQLiteDatabase | null = null;
+  loading: boolean = false;
+  users: BaseUser[] = [];
+  messages: Message[] = [];
+
+  constructor() {
+    makeObservable(this, {
+      users: observable,
+      messages: observable,
+      loading: observable,
+      init: action,
+      initializeUsers: action,
+      addUser: action,
+      deleteUser: action,
+      send: action,
+      loadRecents: action,
+      loadChat: action,
+      proxy: action,
+      reset: action,
+    });
+    this.init();
+  }
+
+  async send(db: SQLiteDatabase, socket: Socket, message: Message) {
+    try {
+      //1st persist the message
+      await insert_message(db, message);
+      //2nd store it in the store
+      this.proxy(() => {
+        this.messages = _.unionBy(this.messages, [message], 'id');
+      });
+      //3rd send it to the server
+      socket
+        .emitWithAck('message', message)
+        .then(() => {
+          //4th update the message state to sent
+          this.proxy(() => {
+            const messageIndex = _.findIndex(this.messages, (m) => m.id === message.id);
+            db.runSync("UPDATE messages SET state = 'SENT' WHERE id = ?", [message.id]);
+            if (messageIndex !== -1) {
+              this.messages[messageIndex].state = messageState.SENT;
+            }
+          });
+        })
+        .catch(() => {
+          //5th update the message state to failed
+          this.proxy(() => {
+            const messageIndex = _.findIndex(this.messages, (m) => m.id === message.id);
+            db.runSync("UPDATE messages SET state = 'FAILED' WHERE id = ?", [message.id]);
+            if (messageIndex !== -1) {
+              this.messages[messageIndex].state = messageState.FAILED;
+            }
+          });
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async receive(db: SQLiteDatabase, message: Message) {
+    try {
+      await insert_message(db, message);
+      this.proxy(() => {
+        this.messages = _.unionBy(this.messages, [message], 'id');
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  reset() {
+    this.users = [];
+    this.messages = [];
+  }
   async deleteUser(db: SQLiteDatabase, address: string) {
     try {
       await db.runAsync('DELETE FROM users WHERE address = ?', [address]);
@@ -37,29 +116,6 @@ class Store {
           return message.sender !== address && message.receiver !== address;
         });
         this.users = _.filter(this.users, (user) => user.address !== address);
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async addMessage(db: SQLiteDatabase, session: Admin, receiver: User, content: string) {
-    const m: Message = {
-      id: randomUUID(),
-      chatId: sortedArrayString([session.address, receiver.address]),
-      sender: session.address,
-      content,
-      receiver: receiver.address,
-      timestamp: dayjs().toISOString(),
-    };
-
-    try {
-      await db.runAsync(
-        'INSERT INTO messages (id, chatId, sender, content, receiver, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
-        [m.id, m.chatId, m.sender, m.content, m.receiver, m.timestamp],
-      );
-      this.proxy(() => {
-        this.messages = _.unionBy(this.messages, [m], 'id');
       });
     } catch (error) {
       console.error(error);
@@ -101,28 +157,6 @@ class Store {
     ]);
   }
 
-  db: SQLiteDatabase | null = null;
-  loading: boolean = false;
-  users: BaseUser[] = [];
-  messages: Message[] = [];
-
-  constructor() {
-    makeObservable(this, {
-      users: observable,
-      messages: observable,
-      loading: observable,
-      init: action,
-      initializeUsers: action,
-      addUser: action,
-      deleteUser: action,
-      addMessage: action,
-      loadRecents: action,
-      loadChat: action,
-      proxy: action,
-    });
-    this.init();
-  }
-
   init() {
     this.loading = true;
     openDatabaseAsync(db_name)
@@ -146,3 +180,17 @@ class Store {
 
 export { User, Message, Admin };
 export default new Store();
+
+async function insert_message(db: SQLiteDatabase, message: Message) {
+  await db.runAsync(
+    'INSERT OR IGNORE INTO messages (id, chatId, sender, content, receiver, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+    [
+      message.id,
+      message.chatId,
+      message.sender,
+      message.content,
+      message.receiver,
+      message.timestamp,
+    ],
+  );
+}

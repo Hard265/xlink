@@ -1,68 +1,89 @@
 import { Buffer } from 'buffer';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Pressable, TextInput, View } from 'react-native';
 
+import Text from '../components/Text';
 import { mnemonicToEntropy, validateMnemonic } from '../encryption/bip39';
 import { createUser, generateKeyPair } from '../encryption/key';
 import { useSession } from '../providers/SessionProvider';
 
 export default function SignIn() {
-  const [mnemonicInput, setMnemonicInput] = useState('');
+  const [mnemonic, setMnemonic] = useState('');
   const { signIn } = useSession();
-  const [invalidMnemonic, setInvaliMnemonic] = useState(false);
-  const onchangetext = (text: string) => {
-    setMnemonicInput(text);
+  const [invalid, setInvalid] = useState(false);
+
+  const [showSignup, setShowSignup] = useState(true);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setShowSignup(false);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setShowSignup(true);
+    });
+
+    return () => {
+      // Cleanup subscriptions
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  const oninput = (value: string) => {
+    setMnemonic(value);
+    setInvalid(false);
   };
 
   const onsignin = () => {
-    if (validateMnemonic(mnemonicInput.trim())) {
-      const user = createUser(
-        generateKeyPair(Buffer.from(mnemonicToEntropy(mnemonicInput), 'hex')),
-      );
-
-      signIn(user);
+    if (validateMnemonic(mnemonic.trim())) {
+      signIn(createUser(generateKeyPair(Buffer.from(mnemonicToEntropy(mnemonic), 'hex'))));
       router.replace('/(app)/');
-    }
-    setInvaliMnemonic(true);
-  };
-  const oncreate = () => {
-    router.push('/sign-up');
+    } else setInvalid(true);
   };
 
-  const counter = mnemonicInput.trim().split(' ').length;
+  const counter = mnemonic.trim().split(' ').length;
 
   return (
-    <View className="p-4 flex-1 justify-center items-center">
-      <View className="flex flex-col w-full my-auto">
+    <View className="p-4 flex-1 justify-center items-center dark:bg-black">
+      <View className="flex flex-col w-full mt-auto">
         <TextInput
           multiline
-          placeholder="mnemonic (24 words)"
+          placeholder="Enter your existing mnemonic seed"
           numberOfLines={3}
           textAlignVertical="top"
-          value={mnemonicInput}
-          onChangeText={onchangetext}
-          className="block w-full rounded-md py-2 px-3 border border-slate-300 focus:border-2 focus:border-slate-600"
+          value={mnemonic}
+          onChangeText={oninput}
+          placeholderTextColor="#6B7280"
+          autoCapitalize="none"
+          className={`block w-full rounded-xl py-2 px-3 bg-gray-100 dark:bg-gray-800 shadow border border-gray-200 focus:border-2 focus:border-gray-800 dark:focus:border-gray-600 ${
+            invalid &&
+            'border-red-600 dark:border-red-500 focus:border-red-600 dark:focus:border-red-500'
+          }`}
         />
-        {invalidMnemonic ? (
-          <Text className="text-start text-xs text-red-600">please provide a valid seed</Text>
-        ) : (
-          <Text className="text-right text-xs leading-5 text-gray-500">{counter}/24</Text>
-        )}
+        <View className="w-full flex flex-row items-center justify-between p-0.5">
+          {invalid && (
+            <Text className="justify-self-start text-xs text-red-600">
+              Please provide a valid 24 words seed
+            </Text>
+          )}
+          <Text className="text-xs justify-self-end ml-auto text-gray-500">{counter}/24</Text>
+        </View>
         <Pressable
           onPress={onsignin}
-          disabled={counter < 24}
-          className="flex w-full justify-center rounded-md bg-slate-950 px-3 py-2.5 mt-4">
-          <Text className="text-sm font-semibold leading-6 text-white text-center">import</Text>
+          className="flex w-full justify-center rounded-xl bg-black dark:bg-white p-2.5 mt-2">
+          <Text className="text-sm leading-6 text-white dark:text-black text-center">Import</Text>
         </Pressable>
       </View>
-      <Pressable
-        onPress={oncreate}
-        className="flex w-full justify-center rounded bg-slate-200 px-3 py-2.5 mt-4">
-        <Text className="text-sm font-semibold leading-6 text-slate-950 text-center">
-          create new address
-        </Text>
-      </Pressable>
+      {showSignup && (
+        <Pressable
+          onPress={() => router.push('/sign-up')}
+          className="flex w-full justify-center rounded-xl bg-gray-200 dark:bg-gray-800 p-2.5 mt-12">
+          <Text className="text-sm leading-6 text-black dark:text-white text-center">
+            Create New Address
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }

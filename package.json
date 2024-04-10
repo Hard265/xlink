@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "check": "tsc check",
@@ -19,6 +19,9 @@
     ]
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.2.3",
+    "@expo-google-fonts/lobster": "^0.2.3",
+    "@expo-google-fonts/pacifico": "^0.2.3",
     "@expo/vector-icons": "^14.0.0",
     "@noble/hashes": "^1.4.0",
     "@react-navigation/native": "^6.1.17",
