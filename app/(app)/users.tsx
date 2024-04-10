@@ -62,6 +62,13 @@ export default observer(() => {
           onBarcodeScanned={onqrscan}
         />
       </Modal>
+      <Modal visible={scanning} statusBarTranslucent onRequestClose={() => setScanning(false)}>
+        <CameraView
+          style={[StyleSheet.absoluteFill]}
+          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+          onBarcodeScanned={onqrscan}
+        />
+      </Modal>
       <Stack.Screen
         options={{
           headerTitleAlign: 'center',

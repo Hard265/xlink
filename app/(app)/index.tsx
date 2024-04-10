@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { Link, Stack, router } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
-import { StatusBar } from 'expo-status-bar';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { useEffect } from 'react';
@@ -16,12 +15,11 @@ import { useSocket } from '../../providers/SocketProvider';
 import store from '../../store/store';
 
 export default observer(() => {
-  const { session } = useSession();
   const db = useSQLiteContext();
+  const { session } = useSession();
   const { connected } = useSocket();
 
   useEffect(() => {
-    (async () => {})();
     store.loadRecents(db);
   }, [session, connected]);
 

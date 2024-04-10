@@ -1,9 +1,8 @@
 import { Stack, router, useGlobalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
-import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { useState } from 'react';
-import { Pressable, View, Text, Modal, ScrollView } from 'react-native';
+import { Pressable, View, Text, Modal } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import styles from '../../../misc/styles';

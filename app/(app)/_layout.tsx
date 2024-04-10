@@ -20,7 +20,6 @@ export default function AppLayout() {
     <SocketProvider url={socketURL}>
       <Stack
         screenOptions={{
-          statusBarStyle: 'auto',
           headerStyle: { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' },
           headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
         }}>
