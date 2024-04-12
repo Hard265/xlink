@@ -2,11 +2,12 @@ import { Stack, router, useGlobalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
 import { observer } from 'mobx-react';
 import { useState } from 'react';
-import { Pressable, View, Text, Modal } from 'react-native';
+import { Pressable, View, Text, Modal, ScrollView } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import styles from '../../../misc/styles';
 import store from '../../../store/store';
+import List from '../../../components/List';
 
 export default observer(() => {
   const { address } = useGlobalSearchParams<{ address: string }>();
@@ -23,20 +24,26 @@ export default observer(() => {
   };
 
   return (
-    <View className="dark:bg-black flex flex-col items-center h-full w-full">
-      <View className="bg-white dark:bg-black w-full p-2 flex flex-row shadow">
-        <View className="p-4 bg-white">
-          <QRCode value={address} size={128} />
+    <View className="dark:bg-black flex flex-1">
+      <ScrollView className="flex-1">
+        <View className=" w-full p-2 flex flex-row shadow">
+          <View className="p-4 bg-white">
+            <QRCode value={address} size={128} />
+          </View>
+          <Text style={[styles.fontFace.InterMedium]} className="dark:text-white text-base px-2 flex-1">
+            {address}
+          </Text>
         </View>
-        <Text
-          style={[styles.fontFace.InterMedium]}
-          className="dark:text-white text-base px-2 flex-1">
-          {address}
-        </Text>
-      </View>
+        <View className="p-2">
+          <List.Title>Privancy</List.Title>
+          <List.CardList>
+            <List.CardList.SwitchItem value={!0} onChange={() => {}} title="disable screenshots" />
+          </List.CardList>
+        </View>
+      </ScrollView>
       <View className="w-full p-2 mt-auto">
         <Pressable
-          className="flex items-center bg-red-600 border border-red-700 p-2 w-full rounded-lg"
+          className="flex items-center bg-red-600 border border-red-700 p-2.5 w-full rounded-xl"
           onPress={() => setModalVisible(true)}>
           <Text className="text-red-200 font-medium">Delete {address}</Text>
         </Pressable>

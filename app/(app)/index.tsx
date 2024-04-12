@@ -41,9 +41,7 @@ export default observer(() => {
   return (
     <View className="items-center justify-center flex-1 bg-white dark:bg-black">
       {!connected ? (
-        <Text className="text-red-600 dark:text-red-500 capitalize p-1">
-          no internet connection
-        </Text>
+        <Text className="text-red-600 dark:text-red-500 capitalize p-1">no internet connection</Text>
       ) : (
         <Text className="text-green-600 dark:text-green-500 capitalize p-1">connected</Text>
       )}
@@ -61,9 +59,7 @@ export default observer(() => {
           };
 
           return (
-            <TouchableOpacity
-              className="w-full flex flex-row gap-x-2 px-2 py-0.5 items-start"
-              onPress={onpress}>
+            <TouchableOpacity className="w-full flex flex-row gap-x-2 px-2 py-0.5 items-start" onPress={onpress}>
               <View className="rounded-full bg-gray-200 dark:bg-gray-600 h-12 w-12 items-center justify-center">
                 <Text className="text-xl uppercase">{address.substring(0, 1)}</Text>
               </View>
@@ -71,10 +67,7 @@ export default observer(() => {
                 <View className="flex flex-row justify-between items-center">
                   <Text className="dark:text-white ">{address}</Text>
                 </View>
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="middle"
-                  className="dark:text-gray-300 flex-2">
+                <Text numberOfLines={1} ellipsizeMode="middle" className="dark:text-gray-300 flex-2">
                   {item.content} &bull;{' '}
                   <Text className="text-xs">
                     {dayjs(item.timestamp).format('h:mm A')} <State message={item} />
@@ -86,9 +79,7 @@ export default observer(() => {
         }}
         keyExtractor={(item) => item.id}
       />
-      <Link
-        className="absolute bottom-2 right-2 p-5 bg-black dark:bg-white rounded-3xl"
-        href="/(app)/users">
+      <Link className="absolute bottom-2 right-2 p-5 bg-black dark:bg-white rounded-3xl" href="/(app)/users">
         <Text className="text-white dark:text-black">
           <Feather name="edit-3" size={20} />
         </Text>
@@ -113,7 +104,7 @@ export default observer(() => {
 const ListEmptyComponent = () => {
   return (
     <View className="my-auto">
-      <Text>No recent chats</Text>
+      <Text className="dark:text-white">No recent chats</Text>
     </View>
   );
 };

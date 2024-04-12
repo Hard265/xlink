@@ -3,7 +3,6 @@ import dayjs from 'dayjs';
 import calender from 'dayjs/plugin/calendar';
 import { Stack, router, useGlobalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite/next';
-import { StatusBar } from 'expo-status-bar';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import React, { createRef, useEffect, useState } from 'react';
@@ -16,14 +15,17 @@ import {
   DefaultSectionT,
   SectionListData,
   Pressable,
+  useColorScheme,
+  TouchableHighlight,
 } from 'react-native';
 import { Socket } from 'socket.io-client';
+import colors from 'tailwindcss/colors';
 
 import State from '../../../components/State';
 import styles from '../../../misc/styles';
 import { useSession } from '../../../providers/SessionProvider';
 import { useSocket } from '../../../providers/SocketProvider';
-import store, { Message, User } from '../../../store/store';
+import store, { MESSAGE_STATE, Message, User } from '../../../store/store';
 import { getRandomId, isoStringToCalender, sortedArrayString } from '../../../utilities';
 
 type SearchParams = {
@@ -33,6 +35,7 @@ type SearchParams = {
 
 export default observer(() => {
   const { address, publicKey } = useGlobalSearchParams<SearchParams>();
+  const colorScheme = useColorScheme();
   const db = useSQLiteContext();
   const scrollRef = createRef<SectionList>();
   const inputRef = createRef<TextInput>();
@@ -73,7 +76,7 @@ export default observer(() => {
       receiver: address,
       content,
       timestamp: new Date().toISOString(),
-      state: 'PENDING',
+      state: MESSAGE_STATE.PENDING,
     });
     inputRef.current?.clear();
     inputRef.current?.blur();
@@ -91,14 +94,10 @@ export default observer(() => {
         ListFooterComponent={!user ? <ListFooterComponent onsave={handle_save} /> : null}
         sections={grouped}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index, section }) => (
-          <ItemRenderer item={item} index={index} section={section} />
-        )}
+        renderItem={({ item, index, section }) => <ItemRenderer item={item} index={index} section={section} />}
         renderSectionFooter={({ section }) => (
           <View className="flex-row justify-center items-center p-2.5">
-            <Text
-              style={[styles.fontFace.InterMedium]}
-              className="text-gray-600 dark:text-gray-200 text-xs">
+            <Text style={[styles.fontFace.InterMedium]} className="text-gray-600 dark:text-gray-200 text-xs">
               {isoStringToCalender(_.last(section.data)?.timestamp)}
             </Text>
           </View>
@@ -113,16 +112,17 @@ export default observer(() => {
           multiline
           numberOfLines={1}
           placeholder="Type your message here..."
+          placeholderTextColor={colorScheme === 'dark' ? colors.gray[400] : colors.gray[600]}
           style={[styles.fontFace.InterMedium]}
           className="flex-1 px-4 py-2 rounded-3xl text-black dark:text-white bg-white dark:bg-gray-800 shadow border border-transparent focus:border-gray-400 dark:focus:border-gray-700"
         />
-        <TouchableOpacity
+        <TouchableHighlight
           onPress={handle_submit}
           className="flex items-center justify-between self-end rounded-full bg-black dark:bg-white p-3">
           <Text className="text-white dark:text-black">
             <Feather name="arrow-up" size={24} />
           </Text>
-        </TouchableOpacity>
+        </TouchableHighlight>
       </View>
       <Stack.Screen
         options={{
@@ -159,9 +159,7 @@ const ItemRenderer = ({ item, index, section }: ItemRendererProps) => {
 
   let borderRadiusClassName = computedBorderRadiusSender(section, index);
   const timestamp = (
-    <Text
-      style={[styles.fontFace.InterMedium]}
-      className="text-xs text-gray-700 dark:text-gray-300 p-1 justify-center">
+    <Text style={[styles.fontFace.InterMedium]} className="text-xs text-gray-700 dark:text-gray-300 p-1 justify-center">
       {dayjs(item.timestamp).format('h:mm A')} <State message={item} />
     </Text>
   );
@@ -169,13 +167,12 @@ const ItemRenderer = ({ item, index, section }: ItemRendererProps) => {
   if (item.sender === session?.address) {
     return (
       <Pressable onPress={onpress} className="flex items-end justify-center w-full px-2 pb-0.5">
-        <View
-          className={`max-w-[85%] p-3 px-4 bg-white dark:bg-gray-800 rounded-3xl shadow ${borderRadiusClassName}`}>
+        <View className={`max-w-[85%] p-3 px-4 bg-white dark:bg-gray-800 rounded-3xl shadow ${borderRadiusClassName}`}>
           <Text style={[styles.fontFace.InterMedium]} className="dark:text-white">
             {item.content}
           </Text>
         </View>
-        {(showOverline || item.state === 'FAILED') && timestamp}
+        {(showOverline || item.state === MESSAGE_STATE.FAILED) && timestamp}
       </Pressable>
     );
   }
@@ -203,9 +200,7 @@ const ListFooterComponent = ({ onsave }: ListFooterComponentProps) => (
       <Text className="dark:text-white">This address is not in your contacts.</Text>
       <View className="flex-row justify-end items-center p-2 pt-4 pb-0 gap-x-4">
         <Text className="font-medium uppercase dark:text-white">Dismiss</Text>
-        <TouchableOpacity
-          onPress={onsave}
-          className="flex-1 items-center p-2 bg-gray-200 dark:bg-gray-950 rounded-xl">
+        <TouchableOpacity onPress={onsave} className="flex-1 items-center p-2 bg-gray-200 dark:bg-gray-950 rounded-xl">
           <Text className="font-medium uppercase dark:text-white">save</Text>
         </TouchableOpacity>
       </View>
@@ -213,20 +208,14 @@ const ListFooterComponent = ({ onsave }: ListFooterComponentProps) => (
   </View>
 );
 
-function computedBorderRadiusReciever(
-  section: SectionListData<Message, DefaultSectionT>,
-  index: number,
-) {
+function computedBorderRadiusReciever(section: SectionListData<Message, DefaultSectionT>, index: number) {
   return _.compact([
     _.isEqual(section.data[index].receiver, section.data[index - 1]?.receiver) && 'rounded-bl',
     _.isEqual(section.data[index].receiver, section.data[index + 1]?.receiver) && 'rounded-tl',
   ]).join(' ');
 }
 
-function computedBorderRadiusSender(
-  section: SectionListData<Message, DefaultSectionT>,
-  index: number,
-) {
+function computedBorderRadiusSender(section: SectionListData<Message, DefaultSectionT>, index: number) {
   return _.compact([
     _.isEqual(section.data[index].sender, section.data[index - 1]?.sender) && 'rounded-br',
     _.isEqual(section.data[index].sender, section.data[index + 1]?.sender) && 'rounded-tr',

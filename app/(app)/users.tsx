@@ -21,22 +21,24 @@ export default observer(() => {
 
   const onqrscan = (scanningResult: BarCodeScanningResult) => {
     const url = new URL(scanningResult.data);
-    router.replace(
-      `/(app)/${url.pathname.replace(/^\/+|\/+$/g, '')}/chat?publicKey=${url.searchParams.get('pub')}`,
-    );
+    router.replace(`/(app)/${url.pathname.replace(/^\/+|\/+$/g, '')}/chat?publicKey=${url.searchParams.get('pub')}`);
   };
   const users = _.filter(store.users, (user) => user.address !== session?.address);
 
+  const dummyUser = () => {
+    store.addUser(db, {
+      address: Math.random().toString(36).substring(2, 15),
+      publicKey: '0x1234567890123456789012345678901234567890',
+    });
+  };
   return (
     <View className="flex-1 p-2 dark:bg-black">
       <FlatList
         ListHeaderComponent={
           <Pressable
-            onPress={() => setScanning(true)}
+            onPress={() => dummyUser()}
             className="flex w-full justify-center rounded-md bg-gray-200 dark:bg-gray-800 p-2">
-            <Text
-              style={[styles.fontFace.InterSemiBold]}
-              className="text-sm leading-6 dark:text-white text-center">
+            <Text style={[styles.fontFace.InterSemiBold]} className="text-sm leading-6 dark:text-white text-center">
               scan address
             </Text>
           </Pressable>
@@ -55,13 +57,6 @@ export default observer(() => {
           </TouchableOpacity>
         )}
       />
-      <Modal visible={scanning} statusBarTranslucent onRequestClose={() => setScanning(false)}>
-        <CameraView
-          style={[StyleSheet.absoluteFill]}
-          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-          onBarcodeScanned={onqrscan}
-        />
-      </Modal>
       <Modal visible={scanning} statusBarTranslucent onRequestClose={() => setScanning(false)}>
         <CameraView
           style={[StyleSheet.absoluteFill]}

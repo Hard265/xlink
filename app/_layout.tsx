@@ -5,6 +5,7 @@ import {
   Inter_500Medium,
   Inter_400Regular,
   Inter_600SemiBold,
+  Inter_900Black,
 } from '@expo-google-fonts/inter';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { Slot } from 'expo-router';
@@ -21,6 +22,7 @@ export default function Root() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_400Regular,
+    Inter_900Black,
     Pacifico_400Regular,
   });
 

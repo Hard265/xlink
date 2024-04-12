@@ -17,10 +17,11 @@ type Admin = BaseUser & {
   privateKey: string;
 };
 
-enum messageState {
-  SENT = 'SENT',
-  PENDING = 'PENDING',
-  FAILED = 'FAILED',
+export enum MESSAGE_STATE {
+  SENT = 'sent',
+  PENDING = 'pending',
+  FAILED = 'failed',
+  DELIVERED = 'delivered',
 }
 
 type Message = {
@@ -30,7 +31,7 @@ type Message = {
   content: string;
   receiver: string;
   timestamp: string;
-  state: keyof typeof messageState;
+  state: MESSAGE_STATE;
 };
 
 class Store {
@@ -44,6 +45,7 @@ class Store {
       users: observable,
       messages: observable,
       loading: observable,
+      onSocketConnection: action,
       init: action,
       initializeUsers: action,
       addUser: action,
@@ -55,6 +57,27 @@ class Store {
       reset: action,
     });
     this.init();
+  }
+
+  async onSocketConnection(db: SQLiteDatabase, socket: Socket, sesion: Admin) {
+    for await (const row of db.getEachAsync<Message>("SELECT * FROM messages WHERE state = 'PENDING' AND sender = ?", [
+      sesion.address,
+    ])) {
+      const index = _.findIndex(this.messages, (m) => m.id === row.id);
+      let result: MESSAGE_STATE;
+      socket
+        .emitWithAck('message', row)
+        .then(() => (result = MESSAGE_STATE.SENT))
+        .catch(() => (result = MESSAGE_STATE.FAILED))
+        .finally(() => {
+          db.runSync('UPDATE messages SET state = ? WHERE id = ?', [result, row.id]);
+          this.proxy(() => {
+            if (index! - 1) {
+              this.messages = _.set(this.messages, [index, 'state'], result);
+            }
+          });
+        });
+    }
   }
 
   async send(db: SQLiteDatabase, socket: Socket, message: Message) {
@@ -74,7 +97,7 @@ class Store {
             const messageIndex = _.findIndex(this.messages, (m) => m.id === message.id);
             db.runSync("UPDATE messages SET state = 'SENT' WHERE id = ?", [message.id]);
             if (messageIndex !== -1) {
-              this.messages[messageIndex].state = messageState.SENT;
+              this.messages[messageIndex].state = MESSAGE_STATE.SENT;
             }
           });
         })
@@ -84,13 +107,24 @@ class Store {
             const messageIndex = _.findIndex(this.messages, (m) => m.id === message.id);
             db.runSync("UPDATE messages SET state = 'FAILED' WHERE id = ?", [message.id]);
             if (messageIndex !== -1) {
-              this.messages[messageIndex].state = messageState.FAILED;
+              this.messages[messageIndex].state = MESSAGE_STATE.FAILED;
             }
           });
         });
     } catch (error) {
       console.error(error);
     }
+  }
+
+  async updateMessage(db: SQLiteDatabase, mid: string, predicate: { [key: string]: string }) {
+    await db.runAsync(`UPDATE OR IGNORE messages SET ${Object.keys(predicate).join(' = ?,')} = ? WHERE id = ?`, [
+      ...Object.values(predicate),
+      mid,
+    ]);
+    this.proxy(() => {
+      const messageIndex = _.findIndex(this.messages, (m) => m.id === mid);
+      if (messageIndex !== -1) this.messages[messageIndex] = _.assign({}, this.messages[messageIndex], predicate);
+    });
   }
 
   async receive(db: SQLiteDatabase, message: Message) {
@@ -108,6 +142,7 @@ class Store {
     this.users = [];
     this.messages = [];
   }
+
   async deleteUser(db: SQLiteDatabase, address: string) {
     try {
       await db.runAsync('DELETE FROM users WHERE address = ?', [address]);
@@ -138,9 +173,7 @@ class Store {
   }
 
   async loadChat(db: SQLiteDatabase, chatId: string) {
-    const messages = await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', [
-      chatId,
-    ]);
+    const messages = await db.getAllAsync<Message>('SELECT * FROM messages WHERE chatId = ?', [chatId]);
     this.proxy(() => {
       this.messages = _.unionBy(this.messages, messages, 'id');
     });
@@ -151,10 +184,7 @@ class Store {
 
   async addUser(db: SQLiteDatabase, user: User) {
     this.users = _.unionBy(this.users, [user], 'address');
-    await db.runAsync('INSERT INTO users (address, publicKey) VALUES (?, ?)', [
-      user.address,
-      user.publicKey,
-    ]);
+    await db.runAsync('INSERT INTO users (address, publicKey) VALUES (?, ?)', [user.address, user.publicKey]);
   }
 
   init() {
@@ -170,11 +200,7 @@ class Store {
   }
 
   async initializeUsers(db: SQLiteDatabase) {
-    this.users = _.unionBy(
-      this.users,
-      await db.getAllAsync<User>('SELECT * FROM users'),
-      'address',
-    );
+    this.users = _.unionBy(this.users, await db.getAllAsync<User>('SELECT * FROM users'), 'address');
   }
 }
 
@@ -184,13 +210,6 @@ export default new Store();
 async function insert_message(db: SQLiteDatabase, message: Message) {
   await db.runAsync(
     'INSERT OR IGNORE INTO messages (id, chatId, sender, content, receiver, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
-    [
-      message.id,
-      message.chatId,
-      message.sender,
-      message.content,
-      message.receiver,
-      message.timestamp,
-    ],
+    [message.id, message.chatId, message.sender, message.content, message.receiver, message.timestamp],
   );
 }

@@ -10,3 +10,11 @@ export default function Text({ ...props }: TextProps) {
     </TextBase>
   );
 }
+
+export function TextBlack({ ...props }: TextProps) {
+  return (
+    <TextBase {...props} style={[styles.fontFace.InterBlack, props.style]}>
+      {props.children}
+    </TextBase>
+  );
+}

@@ -9,6 +9,9 @@ export default {
     InterRegular: {
       fontFamily: 'Inter_400Regular',
     },
+    InterBlack: {
+      fontFamily: 'Inter_900Black',
+    },
     PacificoRegular: {
       fontFamily: 'Pacifico_400Regular',
     },
